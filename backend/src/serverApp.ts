@@ -4,6 +4,7 @@ import http from "http";
 import { errorMiddleware } from "./middlewares/errorMiddleware";
 
 import authRoutes from "./routes/authRoutes";
+import itemRoutes from "./routes/itemRoutes";
 
 export const createApp = () => {
   const app = express();
@@ -15,6 +16,7 @@ export const createApp = () => {
   app.use(express.urlencoded({ extended: true }));
 
   app.use("/api/auth", authRoutes);
+  app.use("/api/items", itemRoutes);
 
   app.use(errorMiddleware);
 
