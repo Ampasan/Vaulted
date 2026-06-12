@@ -1,4 +1,3 @@
-import React from 'react';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import LotCard from '../components/features/auction/LotCard';
@@ -70,23 +69,23 @@ const recentAcquisitionsData = [
 
 const LandingPage = () => {
   return (
-    <div className="min-h-screen bg-[#f4f2eb] text-[#1a1a1a] font-sans selection:bg-black selection:text-white flex flex-col w-full">
+    <div className="min-h-screen bg-cream text-ink font-sans selection:bg-black selection:text-white flex flex-col w-full">
       <Navbar />
       
       <main className="flex-1 w-full">
         {/* Hero Section */}
         <section className="flex flex-col lg:flex-row w-full min-h-[calc(100vh-80px)]">
           <div className="flex-1 px-6 md:px-12 lg:pl-16 xl:pl-24 lg:pr-12 flex flex-col justify-center py-16 lg:py-0 space-y-10 lg:max-w-[50%]">
-            <p className="text-[10px] tracking-[0.25em] text-gray-500 uppercase font-bold">The Grand Gallery — 2024</p>
-            <h1 className="text-[70px] md:text-[90px] xl:text-[130px] font-black leading-[0.85] tracking-tighter uppercase text-black">
+            <p className="text-[10px] tracking-[0.25em] text-gray-500 uppercase font-bold">The Grand Gallery — 2026</p>
+            <h1 className="text-[70px] md:text-[90px] xl:text-[112px] font-black leading-[0.85] tracking-tighter text-black">
               Acquire<br />Rarity.
             </h1>
-            <p className="text-gray-500 max-w-sm leading-relaxed text-[13px] font-medium pr-12">
-              Authenticated physical assets — horology, fine art, and automotive — available through private treaty and live auction.
+            <p className="text-gray-500 max-w-md leading-relaxed text-[15px] font-medium pr-12">
+              Authenticated physical assets horology, fine art, and automotive available through private treaty and live auction.
             </p>
-            <div className="flex items-center gap-8 pt-6">
+            <div className="flex items-center gap-7 pt-6">
               <button className="bg-black text-white px-8 py-4 text-[10px] tracking-[0.2em] font-bold uppercase hover:bg-gray-800 transition-colors whitespace-nowrap">
-                Enter Auction Room &gt;
+                Enter Auction Room &rarr;
               </button>
               <button className="text-black text-[10px] tracking-[0.2em] font-bold uppercase border-b-2 border-black pb-1 hover:text-gray-600 hover:border-gray-600 transition-colors whitespace-nowrap">
                 Browse Marketplace
@@ -109,9 +108,9 @@ const LandingPage = () => {
         <section className="px-6 md:px-12 lg:px-16 xl:px-24 py-24 w-full">
           <div className="flex justify-between items-end mb-12 border-b border-gray-300 pb-4">
             <h2 className="text-2xl font-black tracking-tight text-black">Live Auctions</h2>
-            <a href="#" className="text-[9px] tracking-[0.2em] font-bold text-gray-500 uppercase hover:text-black transition-colors mb-1">View All &gt;</a>
+            <a href="#" className="text-[10px] tracking-[0.2em] font-bold text-gray-500 uppercase hover:text-black transition-colors mb-1">View All &rarr;</a>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 xl:gap-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 xl:gap-10">
             {liveAuctionsData.map(lot => (
               <LotCard key={lot.id} lot={lot} />
             ))}
@@ -119,10 +118,10 @@ const LandingPage = () => {
         </section>
 
         {/* Recent Acquisitions */}
-        <section className="px-6 md:px-12 lg:px-16 xl:px-24 py-24 w-full bg-[#eeebe2]">
+        <section className="px-6 md:px-12 lg:px-16 xl:px-24 py-24 w-full bg-cream">
           <div className="flex justify-between items-end mb-12 border-b border-gray-300 pb-4">
             <h2 className="text-2xl font-black tracking-tight text-black">Recent Acquisitions</h2>
-            <a href="#" className="text-[9px] tracking-[0.2em] font-bold text-gray-500 uppercase hover:text-black transition-colors mb-1">View All &gt;</a>
+            <a href="#" className="text-[10px] tracking-[0.2em] font-bold text-gray-500 uppercase hover:text-black transition-colors mb-1">View All &rarr;</a>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 xl:gap-8">
             {recentAcquisitionsData.map(asset => (
@@ -133,7 +132,7 @@ const LandingPage = () => {
 
         {/* Call to Action */}
         <section className="bg-[#0c0c0c] text-white px-6 md:px-12 lg:px-16 xl:px-24 pt-32 pb-16 w-full">
-          <div className="max-w-[1600px] mx-auto">
+          <div className="max-w-400 mx-auto">
             <h2 className="text-6xl md:text-8xl lg:text-[100px] font-black tracking-tighter mb-4">List Your Asset.</h2>
             <p className="text-[#6b6b6b] max-w-xl text-[13px] font-medium leading-relaxed">
               Submit your piece for vault appraisal and list through private treaty or live auction.

@@ -1,9 +1,7 @@
-import React from 'react';
-
 const Footer = () => {
   return (
     <footer className="bg-[#0c0c0c] text-white px-6 md:px-12 lg:px-16 xl:px-24 pb-12 pt-8 w-full">
-      <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row justify-between mb-32">
+      <div className="max-w-400 mx-auto flex flex-col md:flex-row justify-between mb-32">
         {/* Left side */}
         <div className="flex-1 mb-16 md:mb-0">
           <div className="text-xl md:text-2xl font-black tracking-[0.2em] mb-6 uppercase">VAULTED</div>
@@ -37,7 +35,7 @@ const Footer = () => {
       </div>
 
       {/* Bottom */}
-      <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row justify-between items-center text-[#4a4a4a] text-[9px] tracking-[0.15em] uppercase font-bold pt-8 border-t border-[#2a2a2a]">
+      <div className="max-w-400 mx-auto flex flex-col md:flex-row justify-between items-center text-[#4a4a4a] text-[9px] tracking-[0.15em] uppercase font-bold pt-8 border-t border-[#2a2a2a]">
         <p>© 2024 VAULTED WEB. ALL RIGHTS RESERVED. PRIVATE MEMBERSHIP REQUIRED.</p>
         <p>VAULT SECURITY ASSURED.</p>
       </div>
