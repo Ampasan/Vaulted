@@ -5,6 +5,7 @@ import { errorMiddleware } from "./middlewares/errorMiddleware";
 
 import authRoutes from "./routes/authRoutes";
 import itemRoutes from "./routes/itemRoutes";
+import marketplaceRoutes from "./routes/marketplaceRoutes";
 
 export const createApp = () => {
   const app = express();
@@ -17,6 +18,7 @@ export const createApp = () => {
 
   app.use("/api/auth", authRoutes);
   app.use("/api/items", itemRoutes);
+  app.use("/api/marketplace", marketplaceRoutes);
 
   app.use(errorMiddleware);
 
