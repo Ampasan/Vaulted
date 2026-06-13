@@ -11,6 +11,7 @@ import itemRoutes from "./routes/itemRoutes";
 import marketplaceRoutes from "./routes/marketplaceRoutes";
 import auctionRoutes from "./routes/auctionRoutes";
 import transactionRoutes from "./routes/transactionRoutes";
+import wishlistRoutes from "./routes/wishlistRoutes";
 import notificationRoutes from "./routes/notificationRoutes";
 
 export const createApp = () => {
@@ -37,6 +38,7 @@ export const createApp = () => {
   app.use("/api/marketplace", marketplaceRoutes);
   app.use("/api/auctions", auctionRoutes);
   app.use("/api/transactions", transactionRoutes);
+  app.use("/api/wishlist", wishlistRoutes);
   app.use("/api/notifications", notificationRoutes);
 
   app.use(errorMiddleware);
