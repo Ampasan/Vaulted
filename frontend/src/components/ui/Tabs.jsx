@@ -1,23 +1,24 @@
-const Tabs = ({ activeTab, onTabChange }) => {
-  const tabs = [
-    { id: 'login', label: 'LOGIN' },
-    { id: 'register', label: 'REGISTER' },
-  ];
+import { useState } from 'react';
+
+const Tabs = ({ tabs, activeTab, onTabChange, className = '' }) => {
+  const [internalActive, setInternalActive] = useState(tabs?.[0]?.id || '');
+  const currentActive = activeTab !== undefined ? activeTab : internalActive;
+  const handleChange = onTabChange || setInternalActive;
 
   return (
-    <div className="w-full">
-      <div className="flex gap-10">
+    <div className={`w-full ${className}`}>
+      <div className="flex gap-10 border-b border-[#dcd9ce] pb-0">
         {tabs.map((tab) => {
-          const isActive = activeTab === tab.id;
+          const isActive = currentActive === tab.id;
           return (
             <button
               key={tab.id}
               type="button"
-              onClick={() => onTabChange(tab.id)}
-              className={`pb-3 text-[10px] tracking-[0.2em] uppercase font-bold transition-colors ${
+              onClick={() => handleChange(tab.id)}
+              className={`pb-3.5 text-[12px] tracking-[0.15em] uppercase font-bold transition-colors ${
                 isActive
                   ? 'text-black border-b-2 border-black'
-                  : 'text-gray-400 hover:text-gray-600'
+                  : 'text-gray-500 hover:text-black'
               }`}
             >
               {tab.label}
@@ -25,7 +26,6 @@ const Tabs = ({ activeTab, onTabChange }) => {
           );
         })}
       </div>
-      <div className="w-full border-b border-gray-300" />
     </div>
   );
 };

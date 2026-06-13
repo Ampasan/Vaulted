@@ -1,10 +1,10 @@
+import StatusDot from '../../ui/StatusDot';
+
 const LotCard = ({ lot }) => {
   return (
     <div className="group cursor-pointer flex flex-col h-full">
       <div className="relative overflow-hidden mb-5 bg-cream-light aspect-4/3">
-        <div className="absolute top-4 left-4 bg-red-600 text-white text-[10px] font-bold px-2 py-1 tracking-[0.15em] uppercase z-10 flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_4px_rgba(255,255,255,0.8)] animate-pulse"></span> LIVE
-        </div>
+        <StatusDot status="live" className="absolute top-4 left-4" />
         <img 
           src={lot.image} 
           alt={lot.title}

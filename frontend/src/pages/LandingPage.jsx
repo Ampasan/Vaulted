@@ -1,7 +1,8 @@
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
-import LotCard from '../components/features/auction/LotCard';
 import AssetCard from '../components/features/asset/AssetCard';
+import AssetGrid from '../components/features/asset/AssetGrid';
+import Button from '../components/ui/Button';
 
 const liveAuctionsData = [
   {
@@ -84,12 +85,12 @@ const LandingPage = () => {
               Authenticated physical assets horology, fine art, and automotive available through private treaty and live auction.
             </p>
             <div className="flex items-center gap-7 pt-6">
-              <button className="bg-black text-white px-8 py-4 text-[10px] tracking-[0.2em] font-bold uppercase hover:bg-gray-800 transition-colors whitespace-nowrap">
+              <Button>
                 Enter Auction Room &rarr;
-              </button>
-              <button className="text-black text-[10px] tracking-[0.2em] font-bold uppercase border-b-2 border-black pb-1 hover:text-gray-600 hover:border-gray-600 transition-colors whitespace-nowrap">
+              </Button>
+              <Button variant="link" size="link">
                 Browse Marketplace
-              </button>
+              </Button>
             </div>
           </div>
           <div className="flex-1 w-full relative min-h-[50vh] lg:min-h-0 bg-gray-200">
@@ -110,11 +111,20 @@ const LandingPage = () => {
             <h2 className="text-2xl font-black tracking-tight text-black">Live Auctions</h2>
             <a href="#" className="text-[10px] tracking-[0.2em] font-bold text-gray-500 uppercase hover:text-black transition-colors mb-1">View All &rarr;</a>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 xl:gap-10">
-            {liveAuctionsData.map(lot => (
-              <LotCard key={lot.id} lot={lot} />
-            ))}
-          </div>
+          <AssetGrid
+            items={liveAuctionsData}
+            columns={3}
+            renderItem={(lot) => (
+              <AssetCard
+                asset={{
+                  ...lot,
+                  category: lot.lotNumber,
+                  status: lot.bids.includes('CLOSED') ? 'closed' : 'live',
+                  aspect: 'auction',
+                }}
+              />
+            )}
+          />
         </section>
 
         {/* Recent Acquisitions */}
@@ -123,17 +133,17 @@ const LandingPage = () => {
             <h2 className="text-2xl font-black tracking-tight text-black">Recent Acquisitions</h2>
             <a href="#" className="text-[10px] tracking-[0.2em] font-bold text-gray-500 uppercase hover:text-black transition-colors mb-1">View All &rarr;</a>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 xl:gap-8">
-            {recentAcquisitionsData.map(asset => (
-              <AssetCard key={asset.id} asset={asset} />
-            ))}
-          </div>
+          <AssetGrid
+            items={recentAcquisitionsData}
+            columns={4}
+            renderItem={(asset) => <AssetCard asset={asset} />}
+          />
         </section>
 
         {/* Call to Action */}
-        <section className="bg-[#0c0c0c] text-white px-6 md:px-12 lg:px-16 xl:px-24 pt-32 pb-16 w-full">
+        <section className="bg-[#0c0c0c] text-white px-6 md:px-12 lg:px-16 xl:px-18 pt-32 pb-16 w-full">
           <div className="max-w-400 mx-auto">
-            <h2 className="text-6xl md:text-8xl lg:text-[100px] font-black tracking-tighter mb-4">List Your Asset.</h2>
+            <h2 className="text-6xl md:text-8xl lg:text-[70px] font-black tracking-tighter mb-4">List Your Asset.</h2>
             <p className="text-[#6b6b6b] max-w-xl text-[13px] font-medium leading-relaxed">
               Submit your piece for vault appraisal and list through private treaty or live auction.
             </p>

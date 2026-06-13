@@ -15,7 +15,14 @@ const AuthPage = () => {
       <div className="w-full lg:w-1/2 min-h-screen bg-cream flex flex-col">
         <div className="px-10 md:px-16 lg:px-20 pt-10 md:pt-12">
           <div className="text-2xl font-black tracking-tighter text-black mb-10">VAULTED</div>
-          <Tabs activeTab={activeTab} onTabChange={setActiveTab} />
+          <Tabs 
+            tabs={[
+              { id: 'login', label: 'LOGIN' },
+              { id: 'register', label: 'REGISTER' },
+            ]}
+            activeTab={activeTab} 
+            onTabChange={setActiveTab} 
+          />
         </div>
 
         <div className="flex-1 flex items-center px-10 md:px-16 lg:px-20 py-10">
