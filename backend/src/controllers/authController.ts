@@ -1,10 +1,13 @@
 import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
+import { OAuth2Client } from "google-auth-library";
 import { User } from "../models/User";
 import { ApiError } from "../utils/ApiError";
 import { asyncHandler } from "../utils/asyncHandler";
 import { signToken } from "../middlewares/authMiddleware";
-import { loginSchema, registerSchema } from "../validations/authValidation";
+import { googleLoginSchema, loginSchema, registerSchema } from "../validations/authValidation";
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const sanitizeUser = (user: InstanceType<typeof User>) => ({
   id: user._id,
@@ -53,6 +56,10 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
     throw new ApiError(401, "Invalid email or password");
   }
 
+  if (!user.passwordHash) {
+    throw new ApiError(400, "Please login using Google");
+  }
+
   const isMatch = await bcrypt.compare(data.password, user.passwordHash);
   if (!isMatch) {
     throw new ApiError(401, "Invalid email or password");
@@ -71,6 +78,60 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
       token,
     },
     message: "Login successful",
+  });
+});
+
+export const googleLogin = asyncHandler(async (req: Request, res: Response) => {
+  const data = googleLoginSchema.parse(req.body);
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  if (!clientId) {
+    throw new ApiError(500, "Google Client ID is not configured");
+  }
+
+  let payload;
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken: data.idToken,
+      audience: clientId,
+    });
+    payload = ticket.getPayload();
+  } catch (error) {
+    throw new ApiError(401, "Invalid Google ID token");
+  }
+
+  if (!payload || !payload.email || !payload.sub) {
+    throw new ApiError(400, "Google token is missing required profile info");
+  }
+
+  const { email, name, sub: googleId } = payload;
+
+  let user = await User.findOne({ $or: [{ googleId }, { email }] });
+
+  if (!user) {
+    user = await User.create({
+      name: name || email.split("@")[0],
+      email,
+      googleId,
+      balance: 0,
+    });
+  } else if (!user.googleId) {
+    user.googleId = googleId;
+    await user.save();
+  }
+
+  const token = signToken({
+    id: user._id.toString(),
+    email: user.email,
+    name: user.name,
+  });
+
+  res.json({
+    success: true,
+    data: {
+      user: sanitizeUser(user),
+      token,
+    },
+    message: "Google login successful",
   });
 });
 
