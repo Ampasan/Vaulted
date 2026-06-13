@@ -10,6 +10,7 @@ import authRoutes from "./routes/authRoutes";
 import itemRoutes from "./routes/itemRoutes";
 import marketplaceRoutes from "./routes/marketplaceRoutes";
 import auctionRoutes from "./routes/auctionRoutes";
+import transactionRoutes from "./routes/transactionRoutes";
 import notificationRoutes from "./routes/notificationRoutes";
 
 export const createApp = () => {
@@ -35,6 +36,7 @@ export const createApp = () => {
   app.use("/api/items", itemRoutes);
   app.use("/api/marketplace", marketplaceRoutes);
   app.use("/api/auctions", auctionRoutes);
+  app.use("/api/transactions", transactionRoutes);
   app.use("/api/notifications", notificationRoutes);
 
   app.use(errorMiddleware);
