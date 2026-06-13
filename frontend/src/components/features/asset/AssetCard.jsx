@@ -1,7 +1,7 @@
 const AssetCard = ({ asset }) => {
   return (
     <div className="group cursor-pointer flex flex-col h-full">
-      <div className="overflow-hidden mb-5 bg-gray-200 aspect-9/10">
+      <div className="overflow-hidden mb-5 bg-cream-light aspect-9/10">
         <img 
           src={asset.image} 
           alt={asset.title}

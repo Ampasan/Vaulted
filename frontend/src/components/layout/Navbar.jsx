@@ -7,8 +7,8 @@ const Navbar = () => {
         <Link to="/">VAULTED</Link>
       </div>
       <div className="hidden lg:flex flex-1 items-center justify-center gap-10 text-gray-600">
-        <Link to="/marketplace" className="text-black">Marketplace</Link>
-        <a href="#" className="hover:text-black transition-colors">Auctions</a>
+        <Link to="/marketplace" className="hover:text-black transition-colors text-black">Marketplace</Link>
+        <Link to="/auctions" className="hover:text-black transition-colors text-black">Auctions</Link>
         <a href="#" className="hover:text-black transition-colors">Asset</a>
         <a href="#" className="hover:text-black transition-colors">Portfolio</a>
         <a href="#" className="hover:text-black transition-colors">Wishlist</a>

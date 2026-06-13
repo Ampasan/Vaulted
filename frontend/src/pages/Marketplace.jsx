@@ -13,7 +13,7 @@ const marketplaceData = [
 
 const Marketplace = () => {
   return (
-    <div className="min-h-screen bg-[#f4f2eb] text-[#1a1a1a] font-sans selection:bg-black selection:text-white flex flex-col w-full">
+    <div className="flex flex-col w-full bg-cream text-ink">
       <Navbar />
       
       <main className="flex-1 w-full px-6 md:px-12 lg:px-16 xl:px-24 pt-12 pb-32">
@@ -52,13 +52,13 @@ const Marketplace = () => {
          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 xl:gap-10">
             {marketplaceData.map(item => (
                <div key={item.id} className="group cursor-pointer flex flex-col h-full">
-                  <div className="relative overflow-hidden mb-5 bg-[#e8e6df] aspect-[4/5]">
+                  <div className="relative overflow-hidden mb-5 bg-cream-light aspect-[4/5]">
                      {item.featured && (
                         <div className="absolute top-4 left-4 bg-[#111] text-white text-[8px] font-bold px-2 py-1 tracking-[0.2em] uppercase z-10">
                            FEATURED
                         </div>
                      )}
-                     <div className="absolute top-4 right-4 bg-[#f4f2eb]/90 p-1.5 rounded-full z-10 hover:bg-white transition-colors cursor-pointer">
+                     <div className="absolute top-4 right-4 bg-cream/90 p-1.5 rounded-full z-10 hover:bg-white transition-colors cursor-pointer">
                         <svg className="w-3.5 h-3.5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
                      </div>
                      <img src={item.image} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" />
