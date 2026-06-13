@@ -3,9 +3,11 @@ import { Link } from 'react-router-dom';
 const Navbar = () => {
   return (
     <nav className="w-full flex items-center justify-between px-6 md:px-12 lg:px-16 py-6 text-[12px] tracking-[0.15em] uppercase font-bold text-black border-b border-gray-300 bg-cream">
-      <div className="text-xl md:text-2xl font-black tracking-tighter w-48">VAULTED</div>
+      <div className="text-xl md:text-2xl font-black tracking-tighter w-48">
+        <Link to="/">VAULTED</Link>
+      </div>
       <div className="hidden lg:flex flex-1 items-center justify-center gap-10 text-gray-600">
-        <a href="#" className="text-black">Marketplace</a>
+        <Link to="/marketplace" className="text-black">Marketplace</Link>
         <a href="#" className="hover:text-black transition-colors">Auctions</a>
         <a href="#" className="hover:text-black transition-colors">Asset</a>
         <a href="#" className="hover:text-black transition-colors">Portfolio</a>
