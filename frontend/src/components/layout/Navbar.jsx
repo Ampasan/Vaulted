@@ -30,7 +30,12 @@ const Navbar = ({ variant = 'light', activeLink }) => {
       <div className={`hidden lg:flex flex-1 items-center justify-center gap-10 ${isDark ? 'text-[#888888]' : 'text-gray-600'}`}>
         <Link to="/marketplace" className={`transition-colors ${isDark ? 'hover:text-white' : 'text-black hover:text-black'}`}>Marketplace</Link>
         <Link to="/auctions" className={`transition-colors ${isDark ? 'hover:text-white' : 'text-black hover:text-black'}`}>Auctions</Link>
-        <a href="#" className={`transition-colors ${isDark ? 'hover:text-white' : 'hover:text-black'}`}>Asset</a>
+        <Link
+          to="/asset"
+          className={navLinkClass(isDark, activeLink === 'asset')}
+        >
+          Asset
+        </Link>
         <a href="#" className={`transition-colors ${isDark ? 'hover:text-white' : 'hover:text-black'}`}>Portfolio</a>
         <Link
           to="/wishlist"
