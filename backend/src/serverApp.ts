@@ -13,6 +13,7 @@ import auctionRoutes from "./routes/auctionRoutes";
 import transactionRoutes from "./routes/transactionRoutes";
 import wishlistRoutes from "./routes/wishlistRoutes";
 import notificationRoutes from "./routes/notificationRoutes";
+import dashboardRoutes from "./routes/dashboardRoutes";
 
 export const createApp = () => {
   const app = express();
@@ -40,6 +41,7 @@ export const createApp = () => {
   app.use("/api/transactions", transactionRoutes);
   app.use("/api/wishlist", wishlistRoutes);
   app.use("/api/notifications", notificationRoutes);
+  app.use("/api/dashboard", dashboardRoutes);
 
   app.use(errorMiddleware);
 
