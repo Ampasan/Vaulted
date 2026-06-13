@@ -1,6 +1,11 @@
 const cx = (...classes) => classes.filter(Boolean).join(' ');
 
 const sizeClasses = {
+  xs: {
+    label: 'text-[9px] tracking-[0.2em] mb-0.5',
+    currency: 'text-sm tracking-tight',
+    amount: 'text-sm',
+  },
   sm: {
     label: 'text-[10px] tracking-[0.2em] mb-0.5',
     currency: 'text-md tracking-tight',

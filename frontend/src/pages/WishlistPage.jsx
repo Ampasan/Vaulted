@@ -99,7 +99,7 @@ const WishlistPage = () => {
 
   return (
     <div className="flex flex-col w-full bg-cream text-ink min-h-screen">
-      <Navbar />
+      <Navbar activeLink="wishlist" />
 
       <section className="w-full bg-black px-6 md:px-12 lg:px-16 xl:px-24 pt-10 pb-14">
         <Header

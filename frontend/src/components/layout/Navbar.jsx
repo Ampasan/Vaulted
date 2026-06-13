@@ -1,7 +1,19 @@
 import { Link } from 'react-router-dom';
 import { ShoppingBag, User } from 'lucide-react';
 
-const Navbar = ({ variant = 'light' }) => {
+const navLinkClass = (isDark, isActive) => {
+  if (isActive) {
+    return isDark
+      ? 'text-white underline underline-offset-4 decoration-2 hover:text-white'
+      : 'text-black underline underline-offset-4 decoration-2 hover:text-black';
+  }
+
+  return isDark
+    ? 'transition-colors hover:text-white'
+    : 'text-black transition-colors hover:text-black';
+};
+
+const Navbar = ({ variant = 'light', activeLink }) => {
   const isDark = variant === 'dark';
 
   return (
@@ -22,13 +34,16 @@ const Navbar = ({ variant = 'light' }) => {
         <a href="#" className={`transition-colors ${isDark ? 'hover:text-white' : 'hover:text-black'}`}>Portfolio</a>
         <Link
           to="/wishlist"
-          className={`transition-colors underline underline-offset-4 decoration-2 ${
-            isDark ? 'text-white hover:text-white' : 'text-black hover:text-black'
-          }`}
+          className={navLinkClass(isDark, activeLink === 'wishlist')}
         >
           Wishlist
         </Link>
-        <a href="#" className={`transition-colors ${isDark ? 'hover:text-white' : 'hover:text-black'}`}>Profile</a>
+        <Link
+          to="/profile"
+          className={navLinkClass(isDark, activeLink === 'profile')}
+        >
+          Profile
+        </Link>
       </div>
       <div className="flex items-center justify-end gap-6 w-48">
         <div className={`flex items-center gap-1.5 cursor-pointer transition-colors ${isDark ? 'hover:text-[#888888]' : 'hover:text-gray-600'}`}>
@@ -44,7 +59,7 @@ const Navbar = ({ variant = 'light' }) => {
           to="/auth"
           className={`px-5 py-2.5 text-[10px] tracking-[0.2em] font-bold transition-colors whitespace-nowrap ${
             isDark
-              ? 'bg-black text-white border border-white hover:bg-[#1a1a1a]'
+              ? 'bg-black text-white border border-white hover:bg-ink'
               : 'bg-black text-white hover:bg-gray-800'
           }`}
         >

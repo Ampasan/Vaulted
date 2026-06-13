@@ -8,8 +8,24 @@ const statusClasses = {
     dot: 'bg-white',
   },
   settled: {
-    badge: 'bg-emerald-100 text-emerald-800',
+    badge: 'bg-emerald-50 text-emerald-800 border border-emerald-200',
     dot: 'bg-emerald-500',
+  },
+  verified: {
+    badge: 'bg-emerald-50 text-emerald-800 border border-emerald-200',
+    dot: 'bg-emerald-500',
+  },
+  'escrow-hold': {
+    badge: 'bg-[#ebe8df] text-gray-700 border border-[#dcd9ce]',
+    dot: 'bg-gray-400',
+  },
+  'in-transit': {
+    badge: 'bg-red-50 text-red-700 border border-red-200',
+    dot: 'bg-red-500',
+  },
+  'pending-review': {
+    badge: 'bg-[#ebe8df] text-gray-700 border border-[#dcd9ce]',
+    dot: 'bg-gray-400',
   },
   pending: {
     badge: 'bg-amber-100 text-amber-800',
@@ -65,6 +81,16 @@ const StatusDot = ({ status = 'live', size = 'sm', variant = 'badge', className 
   const tone = statusClasses[normalizedStatus] || statusClasses.default;
   const sizing = sizeClasses[size] || sizeClasses.sm;
   const isInline = variant === 'inline';
+  const isDotOnly = variant === 'dot';
+
+  if (isDotOnly) {
+    return (
+      <span
+        className={cx('rounded-full shrink-0', tone.dot, sizing.dot, className)}
+        aria-hidden="true"
+      />
+    );
+  }
 
   return (
     <div
