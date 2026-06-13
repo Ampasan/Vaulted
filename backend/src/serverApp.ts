@@ -4,10 +4,12 @@ import http from "http";
 import { Server as SocketServer } from "socket.io";
 import { errorMiddleware } from "./middlewares/errorMiddleware";
 import { setSocketServer } from "./services/notificationService";
+import { setupAuctionSocket } from "./sockets/auctionSocket";
 
 import authRoutes from "./routes/authRoutes";
 import itemRoutes from "./routes/itemRoutes";
 import marketplaceRoutes from "./routes/marketplaceRoutes";
+import auctionRoutes from "./routes/auctionRoutes";
 import notificationRoutes from "./routes/notificationRoutes";
 
 export const createApp = () => {
@@ -23,6 +25,7 @@ export const createApp = () => {
   });
 
   setSocketServer(io);
+  setupAuctionSocket(io);
 
   app.use(cors({ origin: clientUrl }));
   app.use(express.json());
@@ -31,9 +34,10 @@ export const createApp = () => {
   app.use("/api/auth", authRoutes);
   app.use("/api/items", itemRoutes);
   app.use("/api/marketplace", marketplaceRoutes);
+  app.use("/api/auctions", auctionRoutes);
   app.use("/api/notifications", notificationRoutes);
 
   app.use(errorMiddleware);
 
-  return { app, server };
+  return { app, server, io };
 };
