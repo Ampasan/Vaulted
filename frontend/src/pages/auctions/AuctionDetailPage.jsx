@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   Clock,
@@ -80,7 +80,16 @@ const itemDetails = {
   ],
 };
 
+const parsePrice = (price) => {
+  const [currency, ...amountParts] = price.trim().split(/\s+/);
+  return {
+    currency: currency || "CHF",
+    amount: amountParts.join(" ") || "0",
+  };
+};
+
 const AuctionDetailPage = () => {
+  const navigate = useNavigate();
   // 'live' | 'won' | 'lost'
   const [auctionStatus, setAuctionStatus] = useState("live");
   const [autoBid, setAutoBid] = useState(false);
@@ -92,6 +101,21 @@ const AuctionDetailPage = () => {
 
   const handleCountdownComplete = () => {
     setAuctionStatus(hasBid ? "won" : "lost");
+  };
+
+  const handleGoToSettlement = () => {
+    const { currency, amount } = parsePrice(itemDetails.currentBid);
+    navigate("/settlement", {
+      state: {
+        asset: {
+          image: itemDetails.images[0],
+          title: itemDetails.title,
+          currency,
+          amount,
+        },
+        returnTo: `/auctions/${itemDetails.id}`,
+      },
+    });
   };
 
   return (
@@ -465,6 +489,7 @@ const AuctionDetailPage = () => {
                   variant="primary"
                   size="lg"
                   className="w-full py-4 text-[11px] bg-[#256037] hover:bg-[#1a4326] border-[#256037]"
+                  onClick={handleGoToSettlement}
                 >
                   PROCEED TO SETTLEMENT &rarr;
                 </Button>
@@ -514,7 +539,8 @@ const AuctionDetailPage = () => {
                 fullWidth
                 variant="primary"
                 size="lg"
-                className="py-4 text-[11px] opacity-50 cursor-not-allowed"
+                className="py-4 text-[11px]"
+                onClick={handleGoToSettlement}
               >
                 ACQUIRE INSTANTLY &rarr;
               </Button>

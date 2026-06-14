@@ -11,6 +11,7 @@ import MakeAssetPage from './pages/MakeAssetPage';
 import TransactionHistoryPage from './pages/TransactionHistoryPage';
 import PortfolioPage from './pages/PortfolioPage';
 import NotificationsPage from './pages/NotificationsPage';
+import SettlementPage from './pages/SettlementPage';
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
         <Route path="/transactions" element={<TransactionHistoryPage />} />
         <Route path="/portfolio" element={<PortfolioPage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
+        <Route path="/settlement" element={<SettlementPage />} />
       </Routes>
     </Router>
   );

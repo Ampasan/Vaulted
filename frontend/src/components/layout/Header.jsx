@@ -9,14 +9,16 @@ const Header = ({ breadcrumb, title, description, action, variant = 'light' }) =
   return (
     <div className={cx('flex flex-col md:flex-row md:items-end md:justify-between gap-6', isDark ? 'text-white' : 'mb-8')}>
       <div>
-        <p
-          className={cx(
-            'text-[11px] uppercase tracking-[0.2em] mb-4 font-bold',
-            isDark ? 'text-[#888888]' : 'text-gray-400'
-          )}
-        >
-          {breadcrumb}
-        </p>
+        {breadcrumb && (
+          <p
+            className={cx(
+              'text-[11px] uppercase tracking-[0.2em] mb-4 font-bold',
+              isDark ? 'text-[#888888]' : 'text-gray-400'
+            )}
+          >
+            {breadcrumb}
+          </p>
+        )}
         <h1 className="text-5xl md:text-[62px] font-black tracking-tighter mb-4">{title}</h1>
         {description && (
           <p

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Heart, Copy, ShieldCheck, X } from "lucide-react";
 import Navbar from "../../components/layout/Navbar";
 import Footer from "../../components/layout/Footer";
@@ -39,10 +39,34 @@ const itemDetails = {
   ],
 };
 
+const parsePrice = (price) => {
+  const [currency, ...amountParts] = price.trim().split(/\s+/);
+  return {
+    currency: currency || "CHF",
+    amount: amountParts.join(" ") || "0",
+  };
+};
+
 const MarketplaceDetailPage = () => {
+  const navigate = useNavigate();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isImageFull, setIsImageFull] = useState(false);
   const selectedImage = itemDetails.images[selectedImageIndex];
+
+  const handleAcquireInstantly = () => {
+    const { currency, amount } = parsePrice(itemDetails.privateSalePrice);
+    navigate("/settlement", {
+      state: {
+        asset: {
+          image: itemDetails.images[0],
+          title: itemDetails.title,
+          currency,
+          amount,
+        },
+        returnTo: `/marketplace/${itemDetails.id}`,
+      },
+    });
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-cream text-ink">
@@ -207,6 +231,7 @@ const MarketplaceDetailPage = () => {
                 variant="primary"
                 size="lg"
                 className="py-4 text-[11px]"
+                onClick={handleAcquireInstantly}
               >
                 ACQUIRE INSTANTLY &rarr;
               </Button>
