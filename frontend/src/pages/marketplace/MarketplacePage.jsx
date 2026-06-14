@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import Navbar from '../../components/layout/Navbar';
 import Footer from '../../components/layout/Footer';
 import Header from '../../components/layout/Header';
@@ -58,18 +59,20 @@ const Marketplace = () => {
            items={marketplaceData} 
            columns={3} 
            renderItem={(item) => (
-             <AssetCard
-               asset={{
-                 ...item,
-                 category: item.maker,
-                 subtitle: item.ref,
-                 price: item.currPrice,
-                 priceLabel: 'Acquisition Value',
-                 aspect: 'marketplace',
-                 showWishlist: true,
-                 actionLabel: <>ACQUIRE INSTANTLY &rarr;</>,
-               }}
-             />
+             <Link key={item.id} to={`/marketplace/${item.id}`} className="block h-full">
+               <AssetCard
+                 asset={{
+                   ...item,
+                   category: item.maker,
+                   subtitle: item.ref,
+                   price: item.currPrice,
+                   priceLabel: 'Acquisition Value',
+                   aspect: 'marketplace',
+                   showWishlist: true,
+                   actionLabel: <>ACQUIRE INSTANTLY &rarr;</>,
+                 }}
+               />
+             </Link>
            )} 
          />
       </main>
