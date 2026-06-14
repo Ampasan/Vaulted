@@ -36,6 +36,8 @@ const AssetCard = ({ asset }) => {
     layout = 'vertical',
     priceLabel,
     showWishlist = false,
+    gain,
+    location,
   } = asset;
 
   const eyebrow = category || lot || lotNumber;
@@ -74,30 +76,54 @@ const AssetCard = ({ asset }) => {
     );
   }
 
-  const priceContent = (
-    <>
-      {displayPriceLabel && (
-        <p className="text-[10px] text-gray-400 tracking-[0.2em] uppercase font-bold">
-          {displayPriceLabel}
-        </p>
-      )}
-      {prevPrice && <p className="text-[13px] text-gray-500 font-medium mb-1 line-through">{prevPrice}</p>}
-      {displayPrice && (
-        <p
-          className={cx(
-            isSimplePrice
-              ? 'text-[13px] font-medium text-gray-500'
-              : 'font-black text-black',
-            currentBid ? 'text-[20px]' : !isSimplePrice && 'text-[17px]'
-          )}
-        >
-          {displayPrice}
-        </p>
-      )}
-      {bids && <p className="text-[10px] text-gray-400 uppercase tracking-widest mt-1">{bids}</p>}
-      {timeLeft && <p className="text-[12px] text-gray-500 font-medium mt-1">{timeLeft}</p>}
-    </>
-  );
+  let priceContent;
+  if (gain) {
+    priceContent = (
+      <div className="flex flex-col border-t border-[#dcd9ce] pt-3 mt-4 w-full">
+        <div className="flex justify-between items-end mb-1">
+           <div>
+             {displayPriceLabel && <p className="text-[9px] text-gray-400 tracking-[0.2em] uppercase font-bold mb-0.5">{displayPriceLabel}</p>}
+             {displayPrice && <p className="text-[14px] font-mono font-bold text-black">{displayPrice}</p>}
+           </div>
+           <div className="text-right">
+             <p className="text-[9px] text-gray-400 tracking-[0.2em] uppercase font-bold mb-0.5">GAIN</p>
+             <p className="text-[14px] font-mono font-bold text-green-600">{gain}</p>
+           </div>
+        </div>
+        {location && (
+          <div className="flex items-center gap-1.5 text-gray-400 mt-2">
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            <p className="text-[10px] font-mono tracking-widest">{location}</p>
+          </div>
+        )}
+      </div>
+    );
+  } else {
+    priceContent = (
+      <>
+        {displayPriceLabel && (
+          <p className="text-[10px] text-gray-400 tracking-[0.2em] uppercase font-bold">
+            {displayPriceLabel}
+          </p>
+        )}
+        {prevPrice && <p className="text-[13px] text-gray-500 font-medium mb-1 line-through">{prevPrice}</p>}
+        {displayPrice && (
+          <p
+            className={cx(
+              isSimplePrice
+                ? 'text-[13px] font-medium text-gray-500'
+                : 'font-black text-black',
+              currentBid ? 'text-[20px]' : !isSimplePrice && 'text-[17px]'
+            )}
+          >
+            {displayPrice}
+          </p>
+        )}
+        {bids && <p className="text-[10px] text-gray-400 uppercase tracking-widest mt-1">{bids}</p>}
+        {timeLeft && <p className="text-[12px] text-gray-500 font-medium mt-1">{timeLeft}</p>}
+      </>
+    );
+  }
 
   return (
     <div className={cx('group cursor-pointer flex flex-col h-full', framed && 'bg-cream-light border border-[#dcd9ce]')}>
@@ -142,7 +168,7 @@ const AssetCard = ({ asset }) => {
           </div>
         ) : (
           <>
-            {displayPrice ? (
+            {displayPrice || gain ? (
               <div className={cx(actionLabel ? 'mt-auto mb-5' : 'mt-auto pt-1')}>
                 {priceContent}
               </div>

@@ -28,15 +28,30 @@ const Navbar = ({ variant = 'light', activeLink }) => {
         <Link to="/">VAULTED</Link>
       </div>
       <div className={`hidden lg:flex flex-1 items-center justify-center gap-10 ${isDark ? 'text-[#888888]' : 'text-gray-600'}`}>
-        <Link to="/marketplace" className={`transition-colors ${isDark ? 'hover:text-white' : 'text-black hover:text-black'}`}>Marketplace</Link>
-        <Link to="/auctions" className={`transition-colors ${isDark ? 'hover:text-white' : 'text-black hover:text-black'}`}>Auctions</Link>
+        <Link
+          to="/marketplace"
+          className={navLinkClass(isDark, activeLink === 'marketplace')}
+        >
+          Marketplace
+        </Link>
+        <Link
+          to="/auctions"
+          className={navLinkClass(isDark, activeLink === 'auctions')}
+        >
+          Auctions
+        </Link>
         <Link
           to="/asset"
           className={navLinkClass(isDark, activeLink === 'asset')}
         >
           Asset
         </Link>
-        <a href="#" className={`transition-colors ${isDark ? 'hover:text-white' : 'hover:text-black'}`}>Portfolio</a>
+        <Link
+          to="/portfolio"
+          className={navLinkClass(isDark, activeLink === 'portfolio')}
+        >
+          Portfolio
+        </Link>
         <Link
           to="/wishlist"
           className={navLinkClass(isDark, activeLink === 'wishlist')}

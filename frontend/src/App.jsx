@@ -7,6 +7,7 @@ import WishlistPage from './pages/WishlistPage';
 import ProfilePage from './pages/ProfilePage';
 import MakeAssetPage from './pages/MakeAssetPage';
 import TransactionHistoryPage from './pages/TransactionHistoryPage';
+import PortfolioPage from './pages/PortfolioPage';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/asset" element={<MakeAssetPage />} />
         <Route path="/transactions" element={<TransactionHistoryPage />} />
+        <Route path="/portfolio" element={<PortfolioPage />} />
       </Routes>
     </Router>
   );

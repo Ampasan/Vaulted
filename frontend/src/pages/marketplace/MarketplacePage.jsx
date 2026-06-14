@@ -29,7 +29,7 @@ const Marketplace = () => {
 
   return (
     <div className="flex flex-col w-full bg-cream text-ink">
-      <Navbar />
+      <Navbar activeLink="marketplace" />
       
       <main className="flex-1 w-full px-6 md:px-12 lg:px-16 xl:px-24 pt-12 pb-32">
          <Header
