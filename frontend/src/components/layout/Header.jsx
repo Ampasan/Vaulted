@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import Button from '../ui/Button';
 
 const cx = (...classes) => classes.filter(Boolean).join(' ');
 
@@ -29,7 +30,20 @@ const Header = ({ breadcrumb, title, description, action, variant = 'light' }) =
         )}
       </div>
       {action && (
-        action.to ? (
+        action.onClick ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={action.onClick}
+            className={cx(
+              'px-0 mb-1 shrink-0',
+              isDark ? 'text-[#888888] hover:text-white' : 'text-gray-500 hover:text-black'
+            )}
+          >
+            {action.label}
+          </Button>
+        ) : action.to ? (
           <Link
             to={action.to}
             className={cx(

@@ -82,18 +82,18 @@ const AssetCard = ({ asset }) => {
       <div className="flex flex-col border-t border-[#dcd9ce] pt-3 mt-4 w-full">
         <div className="flex justify-between items-end mb-1">
            <div>
-             {displayPriceLabel && <p className="text-[9px] text-gray-400 tracking-[0.2em] uppercase font-bold mb-0.5">{displayPriceLabel}</p>}
-             {displayPrice && <p className="text-[14px] font-mono font-bold text-black">{displayPrice}</p>}
+             {displayPriceLabel && <p className="text-[10px] text-gray-400 tracking-[0.2em] uppercase font-bold mb-0.5">{displayPriceLabel}</p>}
+             {displayPrice && <p className="text-[15px] font-mono font-bold text-black">{displayPrice}</p>}
            </div>
            <div className="text-right">
-             <p className="text-[9px] text-gray-400 tracking-[0.2em] uppercase font-bold mb-0.5">GAIN</p>
-             <p className="text-[14px] font-mono font-bold text-green-600">{gain}</p>
+             <p className="text-[10px] text-gray-400 tracking-[0.2em] uppercase font-bold mb-0.5">GAIN</p>
+             <p className="text-[15px] font-mono font-bold text-green-600">{gain}</p>
            </div>
         </div>
         {location && (
           <div className="flex items-center gap-1.5 text-gray-400 mt-2">
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-            <p className="text-[10px] font-mono tracking-widest">{location}</p>
+            <p className="text-[11px] font-mono tracking-widest">{location}</p>
           </div>
         )}
       </div>
@@ -131,8 +131,8 @@ const AssetCard = ({ asset }) => {
         {(status || featured) && (
           <StatusDot
             status={status || 'featured'}
-            size={featured ? 'xs' : 'sm'}
-            className="absolute top-4 left-4"
+            size={featured || gain ? 'xs' : 'sm'}
+            className={gain ? 'absolute top-4 right-4' : 'absolute top-4 left-4'}
           />
         )}
         {showWishlist && (

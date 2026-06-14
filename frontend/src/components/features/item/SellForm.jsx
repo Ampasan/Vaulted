@@ -1,7 +1,7 @@
-import Button from '../../ui/Button';
-import AssetDetailsSection from '../asset/AssetDetailsSection';
-import FixedPriceSection from '../asset/FixedPriceSection';
-import VerificationUploadSection from '../asset/VerificationUploadSection';
+import Button from "../../ui/Button";
+import AssetDetailsSection from "../asset/AssetDetailsSection";
+import FixedPriceSection from "../asset/FixedPriceSection";
+import VerificationUploadSection from "../asset/VerificationUploadSection";
 
 const SellForm = ({
   assetDetails,
@@ -12,7 +12,7 @@ const SellForm = ({
   onSaveDraft,
 }) => {
   return (
-    <div className="mx-auto w-full max-w-4xl">
+    <div className="w-full">
       <div className="flex flex-col gap-14 md:gap-16">
         <AssetDetailsSection
           listingType="sell"
@@ -20,10 +20,7 @@ const SellForm = ({
           onChange={onAssetDetailsChange}
         />
 
-        <FixedPriceSection
-          values={fixedPrice}
-          onChange={onFixedPriceChange}
-        />
+        <FixedPriceSection values={fixedPrice} onChange={onFixedPriceChange} />
 
         <VerificationUploadSection
           listingType="sell"

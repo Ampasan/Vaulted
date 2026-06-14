@@ -1,4 +1,3 @@
-import React from 'react';
 import { AreaChart, Area, ResponsiveContainer, YAxis, Tooltip } from 'recharts';
 
 const data = [
@@ -34,18 +33,18 @@ const PortfolioChart = () => {
     <div className="border border-[#dcd9ce] p-6 bg-transparent h-full flex flex-col">
       <div className="flex justify-between items-start mb-6">
         <div>
-          <p className="text-[9px] text-gray-400 uppercase tracking-[0.2em] font-bold mb-1">PORTFOLIO PERFORMANCE</p>
+          <p className="text-[10px] text-gray-400 uppercase tracking-[0.2em] font-bold mb-1">PORTFOLIO PERFORMANCE</p>
           <div className="flex items-center gap-1 text-green-600">
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
-            <p className="text-[12px] font-mono font-bold">+CHF 2.15M YTD</p>
+            <p className="text-[13px] font-mono font-bold">+CHF 2.15M YTD</p>
           </div>
         </div>
-        <div className="text-[9px] text-gray-400 uppercase tracking-[0.2em] font-bold border border-[#dcd9ce] px-2 py-1">
+        <div className="text-[10px] text-gray-400 uppercase tracking-[0.2em] font-bold border border-[#dcd9ce] px-2 py-1">
           2023
         </div>
       </div>
       
-      <div className="flex-1 w-full min-h-[200px]">
+      <div className="flex-1 w-full min-h-50">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
             <defs>
@@ -69,7 +68,7 @@ const PortfolioChart = () => {
         </ResponsiveContainer>
       </div>
       
-      <div className="flex justify-between text-[8px] text-gray-400 uppercase tracking-widest font-bold mt-4 pt-4 border-t border-[#dcd9ce]">
+      <div className="flex justify-between text-[9px] text-gray-400 uppercase tracking-widest font-bold mt-4 pt-4 border-t border-[#dcd9ce]">
         <span>Jan 23</span>
         <span>Mar 23</span>
         <span>May 23</span>

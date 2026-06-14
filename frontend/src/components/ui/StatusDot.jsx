@@ -55,6 +55,10 @@ const statusClasses = {
     badge: 'bg-gray-100 text-gray-700',
     dot: 'bg-gray-400',
   },
+  unread: {
+    badge: 'bg-red-50 text-red-700',
+    dot: 'bg-red-600',
+  },
 };
 
 const sizeClasses = {

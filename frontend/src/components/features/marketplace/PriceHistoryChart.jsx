@@ -1,4 +1,3 @@
-import React from 'react';
 import { LineChart, Line, ResponsiveContainer, YAxis, Tooltip } from 'recharts';
 
 const data = [
@@ -21,7 +20,7 @@ const data = [
 const CustomTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-black text-white px-3 py-2 text-[10px] font-mono tracking-wider shadow-lg">
+      <div className="bg-black text-white px-3 py-2 text-[12px] font-mono tracking-wider shadow-lg">
         <p className="opacity-70 mb-1">{payload[0].payload.name}</p>
         <p className="font-bold">CHF {payload[0].value.toLocaleString()}</p>
       </div>
@@ -33,7 +32,7 @@ const CustomTooltip = ({ active, payload }) => {
 const PriceHistoryChart = () => {
   return (
     <div className="w-full flex flex-col pt-8">
-      <div className="w-full h-[120px]">
+      <div className="w-full h-30">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 5, right: 0, left: 0, bottom: 5 }}>
             <YAxis hide domain={['dataMin - 10000', 'dataMax + 10000']} />
@@ -50,7 +49,7 @@ const PriceHistoryChart = () => {
         </ResponsiveContainer>
       </div>
       
-      <div className="flex justify-between text-[7px] text-gray-400 font-mono uppercase tracking-widest mt-2 border-t border-[#dcd9ce] pt-2">
+      <div className="flex justify-between text-[9px] text-gray-500 font-mono uppercase tracking-widest mt-2 border-t border-[#dcd9ce] pt-2">
         <span>20</span>
         <span>Oct 20</span>
         <span>Jul 21</span>

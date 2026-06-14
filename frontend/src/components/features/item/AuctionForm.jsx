@@ -1,7 +1,7 @@
-import Button from '../../ui/Button';
-import AssetDetailsSection from '../asset/AssetDetailsSection';
-import AuctionParamsSection from '../asset/AuctionParamsSection';
-import VerificationUploadSection from '../asset/VerificationUploadSection';
+import Button from "../../ui/Button";
+import AssetDetailsSection from "../asset/AssetDetailsSection";
+import AuctionParamsSection from "../asset/AuctionParamsSection";
+import VerificationUploadSection from "../asset/VerificationUploadSection";
 
 const AuctionForm = ({
   assetDetails,
@@ -12,7 +12,7 @@ const AuctionForm = ({
   onSaveDraft,
 }) => {
   return (
-    <div className="mx-auto w-full max-w-4xl">
+    <div className="w-full">
       <div className="flex flex-col gap-14 md:gap-16">
         <AssetDetailsSection
           listingType="auction"

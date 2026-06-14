@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import TransactionFilter from '../components/features/transactions/TransactionFilter';
@@ -98,6 +98,7 @@ const transactionData = [
 const TransactionHistoryPage = () => {
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [filterType, setFilterType] = useState('ALL');
+  const [showFilters, setShowFilters] = useState(false);
 
   const filteredData = transactionData.filter(tx => {
     const matchStatus = filterStatus === 'ALL' || tx.status === filterStatus;
@@ -112,16 +113,16 @@ const TransactionHistoryPage = () => {
       <main className="flex-1 w-full px-6 md:px-12 lg:px-16 xl:px-24 pt-12 pb-32">
         {/* Header section */}
         <div className="mb-12">
-          <a href="#" className="inline-flex items-center text-[9px] tracking-[0.2em] font-bold text-gray-500 hover:text-black uppercase mb-8 transition-colors">
+          <a href="#" className="inline-flex items-center text-[11px] tracking-[0.2em] font-bold text-gray-500 hover:text-black uppercase mb-8 transition-colors">
             <svg className="w-3 h-3 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
             PORTFOLIO
           </a>
           
-          <p className="text-[9px] text-gray-400 uppercase tracking-[0.2em] mb-4 font-bold">
+          <p className="text-[10px] text-gray-400 uppercase tracking-[0.2em] mb-4 font-bold">
             VAULTED <span className="mx-2">&gt;</span> ACQUISITION LEDGER
           </p>
           <h1 className="text-5xl md:text-[64px] font-black tracking-tighter mb-3">Transaction History</h1>
-          <p className="text-[10px] text-gray-500 font-mono tracking-widest uppercase">
+          <p className="text-[11px] text-gray-500 font-mono tracking-widest uppercase">
             8 total transactions <span className="mx-2 text-gray-300">•</span> Settled value: CHF 3.19M
           </p>
         </div>
@@ -129,19 +130,19 @@ const TransactionHistoryPage = () => {
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-16">
           <div className="border border-[#dcd9ce] p-6 bg-transparent">
-            <p className="text-[9px] text-gray-400 uppercase tracking-[0.2em] font-bold mb-4">TOTAL SETTLED</p>
+            <p className="text-[10px] text-gray-400 uppercase tracking-[0.2em] font-bold mb-4">TOTAL SETTLED</p>
             <p className="text-2xl font-mono text-black">CHF 3.44M</p>
           </div>
           <div className="border border-[#dcd9ce] p-6 bg-transparent">
-            <p className="text-[9px] text-gray-400 uppercase tracking-[0.2em] font-bold mb-4">TRANSACTIONS</p>
+            <p className="text-[10px] text-gray-400 uppercase tracking-[0.2em] font-bold mb-4">TRANSACTIONS</p>
             <p className="text-2xl font-mono text-black">8</p>
           </div>
           <div className="border border-[#dcd9ce] p-6 bg-transparent">
-            <p className="text-[9px] text-gray-400 uppercase tracking-[0.2em] font-bold mb-4">IN ESCROW / TRANSIT</p>
+            <p className="text-[10px] text-gray-400 uppercase tracking-[0.2em] font-bold mb-4">IN ESCROW / TRANSIT</p>
             <p className="text-2xl font-mono text-black">2</p>
           </div>
           <div className="border border-[#dcd9ce] p-6 bg-transparent">
-            <p className="text-[9px] text-gray-400 uppercase tracking-[0.2em] font-bold mb-4">ACTIVE VAULTS</p>
+            <p className="text-[10px] text-gray-400 uppercase tracking-[0.2em] font-bold mb-4">ACTIVE VAULTS</p>
             <p className="text-2xl font-mono text-black">3</p>
           </div>
         </div>
@@ -152,16 +153,18 @@ const TransactionHistoryPage = () => {
           onStatusChange={setFilterStatus}
           activeType={filterType}
           onTypeChange={setFilterType}
+          isOpen={showFilters}
+          onToggle={() => setShowFilters((current) => !current)}
         />
 
         {/* Table Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-[#dcd9ce] text-[9px] tracking-[0.2em] font-bold text-gray-400 uppercase px-2 mb-2">
+        <div className="flex items-center justify-between pb-4 border-b border-[#dcd9ce] text-[10px] tracking-[0.2em] font-bold text-gray-400 uppercase px-2 mb-2">
           <div className="w-[12%]">DATE</div>
           <div className="w-[30%]">ASSET</div>
           <div className="w-[18%]">TYPE</div>
           <div className="w-[15%]">TX HASH</div>
-          <div className="w-[15%] text-right">SETTLEMENT</div>
-          <div className="w-[10%] text-right pr-6">STATUS</div>
+          <div className="w-[15%] text-right pr-8 lg:pr-10">SETTLEMENT</div>
+          <div className="w-[10%] text-right pl-6 pr-6">STATUS</div>
         </div>
 
         {/* Table Body */}
