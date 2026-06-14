@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Clock } from "lucide-react";
 import Navbar from "../../components/layout/Navbar";
 import Footer from "../../components/layout/Footer";
@@ -156,7 +157,9 @@ const AuctionsPage = () => {
               </div>
             </div>
 
-            <Button fullWidth>ENTER AUCTION ROOM &rarr;</Button>
+            <Link to="/auctions/featured" className="w-full">
+              <Button fullWidth>ENTER AUCTION ROOM &rarr;</Button>
+            </Link>
           </div>
         </div>
 
@@ -177,18 +180,20 @@ const AuctionsPage = () => {
             items={activeLots}
             columns={2}
             renderItem={(lot) => (
-              <AssetCard
-                asset={{
-                  ...lot,
-                  category: lot.lot,
-                  status: "live",
-                  aspect: "landscape",
-                  framed: true,
-                  showWishlist: true,
-                  actionLabel: "PLACE BID",
-                  actionPlacement: "inline",
-                }}
-              />
+              <Link key={lot.id} to={`/auctions/${lot.id}`} className="block h-full">
+                <AssetCard
+                  asset={{
+                    ...lot,
+                    category: lot.lot,
+                    status: "live",
+                    aspect: "landscape",
+                    framed: true,
+                    showWishlist: true,
+                    actionLabel: "PLACE BID",
+                    actionPlacement: "inline",
+                  }}
+                />
+              </Link>
             )}
           />
         </div>
