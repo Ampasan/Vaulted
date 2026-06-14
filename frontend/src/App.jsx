@@ -6,6 +6,7 @@ import AuctionsPage from './pages/auctions/AuctionsPage';
 import WishlistPage from './pages/WishlistPage';
 import ProfilePage from './pages/ProfilePage';
 import MakeAssetPage from './pages/MakeAssetPage';
+import TransactionHistoryPage from './pages/TransactionHistoryPage';
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Route path="/wishlist" element={<WishlistPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/asset" element={<MakeAssetPage />} />
+        <Route path="/transactions" element={<TransactionHistoryPage />} />
       </Routes>
     </Router>
   );
