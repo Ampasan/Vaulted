@@ -55,11 +55,10 @@ const LoginForm = () => {
   };
 
   useEffect(() => {
-    /* global google */
     if (window.google) {
       try {
         window.google.accounts.id.initialize({
-          client_id: import.meta.env.GOOGLE_CLIENT_ID,
+          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
           callback: handleCredentialResponse,
         });
         window.google.accounts.id.renderButton(
@@ -121,7 +120,6 @@ const LoginForm = () => {
       </div>
 
       <div className="relative w-full flex justify-center">
-        {/* Hidden Google iframe button overlay */}
         <div
           id="googleButtonDivLoginForm"
           className="absolute inset-0 opacity-0 z-10 cursor-pointer overflow-hidden [&>div]:w-full [&>div]:h-full"
