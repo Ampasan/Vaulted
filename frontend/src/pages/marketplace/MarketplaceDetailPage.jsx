@@ -47,13 +47,21 @@ const parsePrice = (price) => {
   };
 };
 
+import useAuth from "../../hooks/useAuth";
+
 const MarketplaceDetailPage = () => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isImageFull, setIsImageFull] = useState(false);
   const selectedImage = itemDetails.images[selectedImageIndex];
 
   const handleAcquireInstantly = () => {
+    if (!isAuthenticated) {
+      navigate("/auth", { state: { from: `/marketplace/${itemDetails.id}` } });
+      return;
+    }
+
     const { currency, amount } = parsePrice(itemDetails.privateSalePrice);
     navigate("/settlement", {
       state: {

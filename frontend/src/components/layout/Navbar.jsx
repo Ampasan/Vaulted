@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Bell, User } from "lucide-react";
+import useAuth from "../../hooks/useAuth";
 
 const navLinkClass = (isDark, isActive) => {
   if (isActive) {
@@ -15,14 +16,14 @@ const navLinkClass = (isDark, isActive) => {
 
 const Navbar = ({ variant = "light", activeLink }) => {
   const isDark = variant === "dark";
+  const { user, isAuthenticated } = useAuth();
 
   return (
     <nav
-      className={`w-full sticky top-0 z-50 flex items-center justify-between px-6 md:px-12 lg:px-16 py-6 text-[12px] tracking-[0.15em] uppercase font-bold ${
-        isDark
-          ? "bg-black text-white"
-          : "text-black border-b border-gray-300 bg-cream"
-      }`}
+      className={`w-full sticky top-0 z-50 flex items-center justify-between px-6 md:px-12 lg:px-16 py-6 text-[12px] tracking-[0.15em] uppercase font-bold ${isDark
+        ? "bg-black text-white"
+        : "text-black border-b border-gray-300 bg-cream"
+        }`}
     >
       <div className="text-xl md:text-2xl font-black tracking-tighter w-48">
         <Link to="/">VAULTED</Link>
@@ -42,59 +43,77 @@ const Navbar = ({ variant = "light", activeLink }) => {
         >
           Auctions
         </Link>
-        <Link
-          to="/asset"
-          className={navLinkClass(isDark, activeLink === "asset")}
-        >
-          Asset
-        </Link>
-        <Link
-          to="/portfolio"
-          className={navLinkClass(isDark, activeLink === "portfolio")}
-        >
-          Portfolio
-        </Link>
-        <Link
-          to="/wishlist"
-          className={navLinkClass(isDark, activeLink === "wishlist")}
-        >
-          Wishlist
-        </Link>
-        <Link
-          to="/profile"
-          className={navLinkClass(isDark, activeLink === "profile")}
-        >
-          Profile
-        </Link>
+        {isAuthenticated && (
+          <>
+            <Link
+              to="/asset"
+              className={navLinkClass(isDark, activeLink === "asset")}
+            >
+              Asset
+            </Link>
+            <Link
+              to="/portfolio"
+              className={navLinkClass(isDark, activeLink === "portfolio")}
+            >
+              Portfolio
+            </Link>
+            <Link
+              to="/wishlist"
+              className={navLinkClass(isDark, activeLink === "wishlist")}
+            >
+              Wishlist
+            </Link>
+            <Link
+              to="/profile"
+              className={navLinkClass(isDark, activeLink === "profile")}
+            >
+              Profile
+            </Link>
+          </>
+        )}
+
       </div>
       <div className="flex items-center justify-end gap-6 w-48">
-        <Link
-          to="/notifications"
-          className={`relative flex items-center gap-1.5 transition-colors ${isDark ? "hover:text-[#888888]" : "hover:text-gray-600"}`}
-          aria-label="Notifications"
-        >
-          <Bell size={16} strokeWidth={2.5} />
-          <span className="absolute -top-2.5 -right-2 bg-red-600 text-white text-[8px] rounded-full w-3.5 h-3.5 flex items-center justify-center">
-            3
-          </span>
-        </Link>
-        <Link
-          to="/profile"
-          className={`hidden md:flex items-center justify-center transition-colors ${isDark ? "hover:text-[#888888]" : "hover:text-gray-600"}`}
-          aria-label="Profile"
-        >
-          <User size={16} strokeWidth={2} />
-        </Link>
-        <Link
-          to="/auth"
-          className={`px-5 py-2.5 text-[10px] tracking-[0.2em] font-bold transition-colors whitespace-nowrap ${
-            isDark
+        {isAuthenticated && user ? (
+          <>
+            <Link
+              to="/notifications"
+              className={`relative flex items-center gap-1.5 transition-colors ${isDark ? "hover:text-[#888888]" : "hover:text-gray-600"}`}
+              aria-label="Notifications"
+            >
+              <Bell size={16} strokeWidth={2.5} />
+              <span className="absolute -top-2.5 -right-2 bg-red-600 text-white text-[8px] rounded-full w-3.5 h-3.5 flex items-center justify-center">
+                3
+              </span>
+            </Link>
+            <Link
+              to="/profile"
+              className={`hidden md:flex items-center justify-center transition-colors ${isDark ? "hover:text-[#888888]" : "hover:text-gray-600"}`}
+              aria-label="Profile"
+            >
+              <User size={16} strokeWidth={2} />
+            </Link>
+            <Link
+              to="/profile"
+              className={`px-5 py-2.5 text-[10px] tracking-[0.2em] font-bold transition-colors whitespace-nowrap overflow-hidden text-ellipsis max-w-[150px] ${isDark
+                ? "bg-black text-white border border-white hover:bg-ink"
+                : "bg-black text-white hover:bg-gray-800"
+                }`}
+            >
+              {user.name.toUpperCase()}
+            </Link>
+          </>
+        ) : (
+          <Link
+            to="/auth"
+            className={`px-5 py-2.5 text-[10px] tracking-[0.2em] font-bold transition-colors whitespace-nowrap ${isDark
               ? "bg-black text-white border border-white hover:bg-ink"
               : "bg-black text-white hover:bg-gray-800"
-          }`}
-        >
-          LOGIN / SIGN UP
-        </Link>
+              }`}
+          >
+            LOGIN / SIGN UP
+          </Link>
+        )}
       </div>
     </nav>
   );

@@ -88,8 +88,11 @@ const parsePrice = (price) => {
   };
 };
 
+import useAuth from "../../hooks/useAuth";
+
 const AuctionDetailPage = () => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   // 'live' | 'won' | 'lost'
   const [auctionStatus, setAuctionStatus] = useState("live");
   const [autoBid, setAutoBid] = useState(false);
@@ -104,6 +107,11 @@ const AuctionDetailPage = () => {
   };
 
   const handleGoToSettlement = () => {
+    if (!isAuthenticated) {
+      navigate("/auth", { state: { from: `/auctions/${itemDetails.id}` } });
+      return;
+    }
+
     const { currency, amount } = parsePrice(itemDetails.currentBid);
     navigate("/settlement", {
       state: {
