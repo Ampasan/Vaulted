@@ -1,5 +1,6 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Check, LogOut, Star } from 'lucide-react';
+import useAuth from '../../../hooks/useAuth';
 import Avatar from '../../ui/Avatar';
 import Badge from '../../ui/Badge';
 
@@ -15,6 +16,14 @@ const ProfileHero = ({
   identityVerified = true,
   className = '',
 }) => {
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+
+  const handleSignOut = () => {
+    logout();
+    navigate('/auth');
+  };
+
   return (
     <section
       className={cx(
@@ -32,6 +41,7 @@ const ProfileHero = ({
           </Link>
           <button
             type="button"
+            onClick={handleSignOut}
             className="inline-flex items-center gap-2 text-[#888888] hover:text-white transition-colors"
           >
             <LogOut size={14} strokeWidth={2} />
