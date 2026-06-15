@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Bell, User } from "lucide-react";
 import useAuth from "../../hooks/useAuth";
+import useNotification from "../../hooks/useNotification";
 
 const navLinkClass = (isDark, isActive) => {
   if (isActive) {
@@ -17,6 +18,7 @@ const navLinkClass = (isDark, isActive) => {
 const Navbar = ({ variant = "light", activeLink }) => {
   const isDark = variant === "dark";
   const { user, isAuthenticated } = useAuth();
+  const { unreadCount } = useNotification();
 
   return (
     <nav
@@ -82,9 +84,11 @@ const Navbar = ({ variant = "light", activeLink }) => {
               aria-label="Notifications"
             >
               <Bell size={16} strokeWidth={2.5} />
-              <span className="absolute -top-2.5 -right-2 bg-red-600 text-white text-[8px] rounded-full w-3.5 h-3.5 flex items-center justify-center">
-                3
-              </span>
+              {unreadCount > 0 && (
+                <span className="absolute -top-2.5 -right-2 bg-red-600 text-white text-[8px] rounded-full w-3.5 h-3.5 flex items-center justify-center">
+                  {unreadCount}
+                </span>
+              )}
             </Link>
             <Link
               to="/profile"

@@ -1,60 +1,52 @@
-import { useMemo, useState } from 'react';
+import { useCallback } from 'react';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import Header from '../components/layout/Header';
 import NotificationItem from '../components/features/notifications/NotificationItem';
-
-const initialNotifications = [
-  {
-    id: 1,
-    type: 'trophy',
-    title: "You've been outbid on LOT #042",
-    description: 'Patek Philippe Grandmaster Chime — New high bid: CHF 31,800,000',
-    timestamp: '2 minutes ago',
-    isRead: false,
-  },
-  {
-    id: 2,
-    type: 'dollar',
-    title: 'Settlement initiated — LOT #039',
-    description: 'Wire transfer #VLT-982X-77 has been received and confirmed by custodian.',
-    timestamp: '1 hour ago',
-    isRead: false,
-  },
-  {
-    id: 3,
-    type: 'shield',
-    title: 'New device login detected',
-    description: 'Geneva, Switzerland — Safari on macOS — Nov 24, 2023 14:22 GMT',
-    timestamp: '3 hours ago',
-    isRead: false,
-  },
-  {
-    id: 4,
-    type: 'bell',
-    title: 'Auction starting in 30 minutes',
-    description: 'Hermès Exotics Collection — Commencing 12.06.2026 | 14:00 GMT',
-    timestamp: '29 minutes ago',
-    isRead: true,
-  },
-];
+import { useNotification } from '../hooks/useNotification';
+import { formatDate } from '../utils/formatDate';
 
 const NotificationsPage = () => {
-  const [notifications, setNotifications] = useState(initialNotifications);
+  const {
+    notifications,
+    loading,
+    unreadCount,
+    markAllAsRead,
+    dismissNotification,
+    
+  } = useNotification();
 
-  const unreadCount = useMemo(
-    () => notifications.filter((notification) => !notification.isRead).length,
-    [notifications]
-  );
+  const handleMarkAllRead = useCallback(() => {
+    markAllAsRead();
+  }, [markAllAsRead]);
 
-  const handleMarkAllRead = () => {
-    setNotifications((current) =>
-      current.map((notification) => ({ ...notification, isRead: true }))
-    );
+  const mapType = (type) => {
+    switch (type) {
+      case 'outbid':
+      case 'auction_won':
+        return 'trophy';
+      case 'auction_ending':
+        return 'bell';
+      case 'transaction_success':
+        return 'dollar';
+      default:
+        return 'bell';
+    }
   };
 
-  const handleDismiss = (id) => {
-    setNotifications((current) => current.filter((notification) => notification.id !== id));
+  const mapTitle = (type) => {
+    switch (type) {
+      case 'outbid':
+        return 'You have been outbid';
+      case 'auction_won':
+        return 'Auction Won!';
+      case 'auction_ending':
+        return 'Auction Ending Soon';
+      case 'transaction_success':
+        return 'Transaction Successful';
+      default:
+        return 'Notification';
+    }
   };
 
   return (
@@ -77,16 +69,20 @@ const NotificationsPage = () => {
         />
 
         <div className="mt-4">
-          {notifications.length > 0 ? (
+          {loading ? (
+            <p className="py-16 text-center text-[13px] text-gray-500 font-medium border-b border-[#dcd9ce]">
+              Loading notifications...
+            </p>
+          ) : notifications.length > 0 ? (
             notifications.map((notification) => (
               <NotificationItem
-                key={notification.id}
-                type={notification.type}
-                title={notification.title}
-                description={notification.description}
-                timestamp={notification.timestamp}
+                key={notification._id || notification.id}
+                type={mapType(notification.type)}
+                title={mapTitle(notification.type)}
+                description={notification.message}
+                timestamp={formatDate(notification.createdAt)}
                 isRead={notification.isRead}
-                onDismiss={() => handleDismiss(notification.id)}
+                onDismiss={() => dismissNotification(notification._id || notification.id)}
               />
             ))
           ) : (
