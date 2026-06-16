@@ -68,11 +68,15 @@ export const getItemById = asyncHandler(async (req: Request, res: Response) => {
 
 export const createItem = asyncHandler(async (req: Request, res: Response) => {
   const data = createItemSchema.parse(req.body);
+  const name = data.name || data.title || "Untitled";
+  const currentPrice = data.currentPrice ?? 0;
 
   const item = await Item.create({
     ...data,
+    name,
+    currentPrice,
     ownerId: req.user!.id,
-    priceHistory: [{ price: data.currentPrice, recordedAt: new Date() }],
+    priceHistory: currentPrice > 0 ? [{ price: currentPrice, recordedAt: new Date() }] : [],
   });
 
   res.status(201).json({

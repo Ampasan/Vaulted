@@ -18,6 +18,11 @@ export interface IAuction extends Document {
   startTime: Date;
   endTime: Date;
   status: AuctionStatus;
+  reservePrice?: number;
+  bidIncrement?: number;
+  buyNowEnabled?: boolean;
+  buyNowPrice?: number;
+  scheduledStart?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -46,6 +51,11 @@ const auctionSchema = new Schema<IAuction>(
       enum: ["active", "ended", "cancelled"],
       default: "active",
     },
+    reservePrice: { type: Number, min: 0 },
+    bidIncrement: { type: Number, min: 1 },
+    buyNowEnabled: { type: Boolean, default: false },
+    buyNowPrice: { type: Number, min: 0 },
+    scheduledStart: { type: Date },
   },
   { timestamps: true }
 );

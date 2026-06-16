@@ -78,6 +78,11 @@ export const createAuction = asyncHandler(async (req: Request, res: Response) =>
     currentBid: 0,
     endTime: data.endTime,
     status: "active",
+    reservePrice: data.reservePrice,
+    bidIncrement: data.bidIncrement,
+    buyNowEnabled: data.buyNowEnabled,
+    buyNowPrice: data.buyNowPrice,
+    scheduledStart: data.scheduledStart,
   });
 
   const populated = await Auction.findById(auction._id)
