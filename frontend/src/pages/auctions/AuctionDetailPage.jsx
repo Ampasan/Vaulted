@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useMemo } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
   Clock,
@@ -17,114 +17,216 @@ import Input from "../../components/ui/Input";
 import Countdown from "../../components/ui/Countdown";
 import StatusDot from "../../components/ui/StatusDot";
 import PriceHistoryChart from "../../components/features/marketplace/PriceHistoryChart";
-
-const itemDetails = {
-  id: 1,
-  images: [
-    "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&q=80&w=1200",
-    "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?auto=format&fit=crop&q=80&w=400",
-    "https://images.unsplash.com/photo-1587836374828-dd4052f6b3b5?auto=format&fit=crop&q=80&w=400",
-    "https://images.unsplash.com/photo-1622434641406-a158123450f9?auto=format&fit=crop&q=80&w=400",
-  ],
-  lot: "LOT 8042",
-  year: "YEAR 2016",
-  title: "Patek Philippe Grandmaster Chime",
-  subtitle: "Ref 6300A-010 • Unique Piece in Stainless Steel",
-  currentBid: "CHF 31,190,400",
-  startingBid: "CHF 18,000,000",
-  endDateStr: "12.06.2026 • 18:00 GMT",
-  totalBids: 47,
-  bidders: 12,
-  bidHistory: [
-    {
-      id: "#VLT-9938",
-      amount: "CHF 31,190,400",
-      time: "2 min ago",
-      status: "LEADING",
-    },
-    {
-      id: "#VLT-2241",
-      amount: "CHF 30,800,000",
-      time: "4 min ago",
-      status: null,
-    },
-    {
-      id: "#VLT-9938",
-      amount: "CHF 29,500,000",
-      time: "9 min ago",
-      status: null,
-    },
-    {
-      id: "#VLT-5517",
-      amount: "CHF 28,200,000",
-      time: "14 min ago",
-      status: null,
-    },
-    {
-      id: "#VLT-2241",
-      amount: "CHF 27,000,000",
-      time: "22 min ago",
-      status: null,
-    },
-    {
-      id: "#VLT-1103",
-      amount: "CHF 25,500,000",
-      time: "31 min ago",
-      status: null,
-    },
-  ],
-  provenance: [
-    { period: "2016 - Present", desc: "Private Collection, Geneva" },
-    { period: "Nov 2016", desc: "Only Watch Charity Auction" },
-    { period: "2014 - 2016", desc: "Patek Philippe SA, Manufacture" },
-  ],
-};
-
-const parsePrice = (price) => {
-  const [currency, ...amountParts] = price.trim().split(/\s+/);
-  return {
-    currency: currency || "CHF",
-    amount: amountParts.join(" ") || "0",
-  };
-};
-
 import useAuth from "../../hooks/useAuth";
+import assetService from "../../services/assetService";
 
 const AuctionDetailPage = () => {
+  const { id } = useParams();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
-  // 'live' | 'won' | 'lost'
-  const [auctionStatus, setAuctionStatus] = useState("live");
+  const { user, isAuthenticated } = useAuth();
+
+  const [auction, setAuction] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const [bidAmount, setBidAmount] = useState("");
+  const [bidError, setBidError] = useState(null);
+  const [bidSuccess, setBidSuccess] = useState(false);
+
   const [autoBid, setAutoBid] = useState(false);
-  const [hasBid, setHasBid] = useState(true); // Toggle this to test 'lost' vs 'won'
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isImageFull, setIsImageFull] = useState(false);
   const [isBidHistoryOpen, setIsBidHistoryOpen] = useState(false);
-  const selectedImage = itemDetails.images[selectedImageIndex];
 
-  const handleCountdownComplete = () => {
-    setAuctionStatus(hasBid ? "won" : "lost");
+  const fetchAuction = async () => {
+    try {
+      const res = await assetService.getAuctionById(id);
+      if (res.success && res.data) {
+        setAuction(res.data);
+      } else {
+        throw new Error(res.message || "Failed to fetch auction details");
+      }
+    } catch (err) {
+      console.error("Error loading auction:", err);
+      setError(err.message || "Error loading auction.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleGoToSettlement = () => {
+  useEffect(() => {
+    if (id) {
+      fetchAuction();
+    }
+  }, [id]);
+
+  const handleCountdownComplete = () => {
+    fetchAuction();
+  };
+
+  const handlePlaceBid = async (e) => {
+    e.preventDefault();
+    setBidError(null);
+    setBidSuccess(false);
+
     if (!isAuthenticated) {
-      navigate("/auth", { state: { from: `/auctions/${itemDetails.id}` } });
+      navigate("/auth", { state: { from: `/auctions/${id}` } });
       return;
     }
 
-    const { currency, amount } = parsePrice(itemDetails.currentBid);
+    const amount = Number(bidAmount);
+    if (!amount || isNaN(amount)) {
+      setBidError("Please enter a valid bid amount.");
+      return;
+    }
+
+    const currentHighPrice = Math.max(auction?.currentBid || 0, auction?.startPrice || 0);
+    if (amount <= currentHighPrice) {
+      setBidError(`Bid must be greater than CHF ${currentHighPrice.toLocaleString()}`);
+      return;
+    }
+
+    try {
+      const res = await assetService.placeBid(id, amount);
+      if (res.success) {
+        setBidSuccess(true);
+        setBidAmount("");
+        fetchAuction();
+      } else {
+        setBidError(res.message || "Failed to place bid");
+      }
+    } catch (err) {
+      console.error(err);
+      setBidError(err.response?.data?.message || "Failed to place bid.");
+    }
+  };
+
+  const item = useMemo(() => auction?.itemId || {}, [auction]);
+  const images = useMemo(() => {
+    if (Array.isArray(item.imageUrl) && item.imageUrl.length > 0) {
+      return item.imageUrl;
+    }
+    if (typeof item.imageUrl === "string" && item.imageUrl) {
+      return [item.imageUrl];
+    }
+  }, [item]);
+
+  const selectedImage = images[selectedImageIndex];
+
+  const nameParts = useMemo(() => (item.name || "").split(" "), [item]);
+  const maker = nameParts[0] || "";
+  const titleOnly = nameParts.slice(1).join(" ") || item.name || "Untitled";
+
+  const lotSerial = useMemo(() => `LOT ${id?.substring(18).toUpperCase() || "LOT"}`, [id]);
+  const vaultSerial = useMemo(() => `GP-${item._id?.substring(18).toUpperCase() || "GP"}`, [item]);
+
+  const totalBids = useMemo(() => auction?.bids?.length || 0, [auction]);
+  const biddersCount = useMemo(() => {
+    if (!auction?.bids) return 0;
+    return new Set(auction.bids.map((b) => b.userId?._id || b.userId)).size;
+  }, [auction]);
+
+  const sortedBids = useMemo(() => {
+    if (!auction?.bids) return [];
+    return [...auction.bids].sort((a, b) => b.amount - a.amount);
+  }, [auction]);
+
+  const isUpcoming = useMemo(() => {
+    if (!auction?.startTime) return false;
+    return new Date(auction.startTime) > new Date();
+  }, [auction]);
+
+  const initialSeconds = useMemo(() => {
+    if (!auction) return 0;
+    const targetDate = isUpcoming ? new Date(auction.startTime) : new Date(auction.endTime);
+    const diff = Math.floor((targetDate - new Date()) / 1000);
+    return Math.max(0, diff);
+  }, [auction, isUpcoming]);
+
+  const isLive = useMemo(() => {
+    return auction?.status === "active" && !isUpcoming && initialSeconds > 0;
+  }, [auction, isUpcoming, initialSeconds]);
+
+  const currentUserId = user?.id || user?._id;
+  const isLeadingBidder = useMemo(() => {
+    if (!auction?.highestBidderId || !currentUserId) return false;
+    const leadId = typeof auction.highestBidderId === "object"
+      ? auction.highestBidderId._id || auction.highestBidderId.id
+      : auction.highestBidderId;
+    return leadId === currentUserId;
+  }, [auction, currentUserId]);
+
+  const hasPlacedAnyBid = useMemo(() => {
+    if (!auction?.bids || !currentUserId) return false;
+    return auction.bids.some(b => {
+      const bidUserId = typeof b.userId === "object" ? b.userId._id || b.userId.id : b.userId;
+      return bidUserId === currentUserId;
+    });
+  }, [auction, currentUserId]);
+
+  const auctionStatus = useMemo(() => {
+    if (isUpcoming) return "upcoming";
+    if (isLive) return "live";
+    if (hasPlacedAnyBid && isLeadingBidder) return "won";
+    return "lost";
+  }, [isUpcoming, isLive, hasPlacedAnyBid, isLeadingBidder]);
+
+  const handleGoToSettlement = () => {
+    if (!isAuthenticated) {
+      navigate("/auth", { state: { from: `/auctions/${id}` } });
+      return;
+    }
+
+    const finalAmount = Math.max(auction?.currentBid || 0, auction?.startPrice || 0);
+    const firstImage = images[0];
+
     navigate("/settlement", {
       state: {
         asset: {
-          image: itemDetails.images[0],
-          title: itemDetails.title,
-          currency,
-          amount,
+          image: firstImage,
+          title: item.name || "Untitled Lot",
+          currency: "CHF",
+          amount: finalAmount,
+          id: item._id,
         },
-        returnTo: `/auctions/${itemDetails.id}`,
+        returnTo: `/auctions/${id}`,
       },
     });
   };
+
+  const provenance = useMemo(() => {
+    return [
+      { period: "Present", desc: `Secured in Vault. Custody managed under certificate ${vaultSerial}.` },
+      { period: "Listed", desc: `Listed for public auction on Vaulted Platform by authorized owner.` }
+    ];
+  }, [vaultSerial]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col min-h-screen bg-cream text-ink">
+        <Navbar activeLink="auctions" />
+        <main className="flex-1 flex items-center justify-center p-16">
+          <p className="text-[13px] text-gray-500 font-mono uppercase tracking-wider">Loading auction details...</p>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (error || !auction) {
+    return (
+      <div className="flex flex-col min-h-screen bg-cream text-ink">
+        <Navbar activeLink="auctions" />
+        <main className="flex-1 flex flex-col items-center justify-center p-16">
+          <p className="text-[13px] text-red-500 font-mono uppercase tracking-wider mb-6">{error || "Auction not found"}</p>
+          <Link to="/auctions" className="text-[11px] font-bold tracking-[0.2em] uppercase hover:underline">
+            &larr; Back to Auctions
+          </Link>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-cream text-ink">
@@ -150,22 +252,26 @@ const AuctionDetailPage = () => {
               >
                 AUTHENTICATED
               </Badge>
-              {auctionStatus === "live" && (
+              {isUpcoming ? (
+                <div className="absolute top-4 right-4 z-10 flex items-center gap-1 bg-gray-500 text-white text-[9px] font-bold px-2 py-1 tracking-widest uppercase">
+                  UPCOMING
+                </div>
+              ) : isLive ? (
                 <StatusDot
                   status="live"
                   size="sm"
                   className="absolute top-4 right-4 z-10"
                 />
-              )}
+              ) : null}
               <img
                 src={selectedImage}
-                alt={itemDetails.title}
+                alt={item.name}
                 className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
               />
               <button
                 type="button"
                 onClick={() => setIsImageFull(true)}
-                className="absolute bottom-4 right-4 w-8 h-8 bg-white/80 hover:bg-white flex items-center justify-center rounded-full transition-colors z-20"
+                className="absolute bottom-4 right-4 w-8 h-8 bg-white/80 hover:bg-white flex items-center justify-center rounded-full transition-colors z-20 cursor-pointer"
                 aria-label="Open full image"
               >
                 <svg
@@ -186,7 +292,7 @@ const AuctionDetailPage = () => {
 
             {/* Thumbnails */}
             <div className="grid grid-cols-4 gap-4 mb-8">
-              {itemDetails.images.slice(0, 4).map((img, idx) => (
+              {images.slice(0, 4).map((img, idx) => (
                 <button
                   key={idx}
                   type="button"
@@ -210,7 +316,7 @@ const AuctionDetailPage = () => {
                   TOTAL BIDS
                 </p>
                 <p className="text-[15px] font-mono font-bold text-black">
-                  {itemDetails.totalBids}
+                  {totalBids}
                 </p>
               </div>
               <div className="p-4">
@@ -231,7 +337,7 @@ const AuctionDetailPage = () => {
                       d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                     ></path>
                   </svg>
-                  {itemDetails.bidders}
+                  {biddersCount}
                 </p>
               </div>
               <div className="p-4">
@@ -275,7 +381,7 @@ const AuctionDetailPage = () => {
                 </svg>
                 PRICE HISTORY
               </p>
-              <PriceHistoryChart />
+              <PriceHistoryChart history={item.priceHistory || []} initialPrice={item.currentPrice} />
             </div>
 
             {/* Provenance */}
@@ -284,23 +390,12 @@ const AuctionDetailPage = () => {
                 Provenance
               </h3>
               <div className="flex flex-col gap-5">
-                {itemDetails.provenance.map((prov, idx) => (
+                {provenance.map((prov, idx) => (
                   <div key={idx} className="flex items-start gap-4">
                     <div className="w-1.5 h-1.5 rounded-full bg-gray-300 mt-1.5 shrink-0"></div>
                     <div className="flex-1">
                       <p className="text-[12px] font-mono text-gray-400 mb-1">
-                        {prov.period.split(" - ").map((p, i) => (
-                          <React.Fragment key={i}>
-                            {i > 0 && (
-                              <span className="mx-1 text-gray-300">-</span>
-                            )}
-                            {p === "Present" ? (
-                              <span className="text-black">{p}</span>
-                            ) : (
-                              p
-                            )}
-                          </React.Fragment>
-                        ))}
+                        {prov.period}
                       </p>
                       <p className="text-[13px] font-medium text-black">
                         {prov.desc}
@@ -316,35 +411,28 @@ const AuctionDetailPage = () => {
           <div className="flex flex-col">
             {/* Headers */}
             <div className="mb-8">
-              <p className="text-[12px] text-gray-400 tracking-[0.2em] uppercase font-bold mb-3 flex items-center justify-between">
-                <span>
-                  {itemDetails.lot} <span className="mx-2">•</span>{" "}
-                  {itemDetails.year}
-                </span>
-                <span
-                  className="text-[#3b8754] text-[8px] cursor-pointer hover:underline"
-                  onClick={() => setHasBid(!hasBid)}
-                >
-                  [TEST: {hasBid ? "WILL WIN" : "WILL LOSE"}]
-                </span>
+              <p className="text-[12px] text-gray-400 tracking-[0.2em] uppercase font-bold mb-3">
+                {lotSerial} {item.year ? <><span className="mx-2">•</span> YEAR {item.year}</> : null}
               </p>
               <h1 className="text-4xl md:text-5xl font-black font-serif tracking-tight leading-none mb-4">
-                {itemDetails.title}
+                <span className="text-[#888888] font-normal mr-2 block uppercase">{maker}</span>
+                {titleOnly}
               </h1>
               <p className="text-[15px] font-medium text-gray-500 mb-6">
-                {itemDetails.subtitle}
+                {item.description || "No description provided."}
               </p>
             </div>
 
-            {/* Time Remaining */}
+            {/* Time Remaining / Commencing */}
             <div className="border border-[#dcd9ce] p-6 mb-8 flex items-center justify-between">
               <div>
                 <p className="text-[11px] text-gray-400 tracking-[0.2em] uppercase font-bold mb-2">
-                  TIME REMAINING
+                  {isUpcoming ? "AUCTION COMMENCES IN" : "TIME REMAINING"}
                 </p>
-                {auctionStatus === "live" ? (
+                {isUpcoming || isLive ? (
                   <Countdown
-                    initialSeconds={5}
+                    key={initialSeconds}
+                    initialSeconds={initialSeconds}
                     onComplete={handleCountdownComplete}
                   />
                 ) : (
@@ -354,27 +442,51 @@ const AuctionDetailPage = () => {
                 )}
               </div>
               <div className="text-[13px] text-gray-400 tracking-[0.15em] uppercase font-bold flex items-center gap-1 text-right">
-                <Clock className="w-3 h-3" /> {itemDetails.endDateStr}
+                <Clock className="w-3 h-3" /> {new Date(isUpcoming ? auction.startTime : auction.endTime).toLocaleString('en-GB')}
               </div>
             </div>
 
-            {/* High Bid */}
+            {/* High Bid / Starting Bid */}
             <div className="mb-8">
               <p className="text-[11px] text-gray-400 tracking-[0.2em] uppercase font-bold mb-2">
-                CURRENT HIGH BID
+                {isUpcoming ? "STARTING BID" : "CURRENT HIGH BID"}
               </p>
               <p className="text-3xl md:text-4xl font-mono font-bold text-black tracking-tight mb-2">
-                {itemDetails.currentBid}
+                CHF {Math.max(auction.currentBid || 0, auction.startPrice || 0).toLocaleString()}
               </p>
-              <p className="text-[13px] font-mono text-gray-400">
-                Starting bid: {itemDetails.startingBid}
-              </p>
+              {!isUpcoming && (
+                <p className="text-[13px] font-mono text-gray-400">
+                  Starting bid: CHF {auction.startPrice.toLocaleString()}
+                </p>
+              )}
             </div>
 
             {/* Logic Panels */}
-            {auctionStatus === "live" && (
+            {isUpcoming && (
+              <div className="border border-[#dcd9ce] p-6 mb-6 bg-cream-light text-center">
+                <p className="text-[10px] text-gray-400 tracking-[0.2em] uppercase font-bold mb-2">
+                  AUCTION NOT STARTED
+                </p>
+                <p className="text-sm font-medium text-gray-600">
+                  Bidding has not commenced for this lot yet. The auction will start on{" "}
+                  <strong>{new Date(auction.startTime).toLocaleString('en-GB')}</strong>.
+                </p>
+              </div>
+            )}
+            {isLive && (
               <>
-                <div className="border border-[#dcd9ce] p-6 mb-6">
+                <form onSubmit={handlePlaceBid} className="border border-[#dcd9ce] p-6 mb-6">
+                  {bidError && (
+                    <div className="mb-4 text-xs font-mono text-red-600 uppercase tracking-wide">
+                      Error: {bidError}
+                    </div>
+                  )}
+                  {bidSuccess && (
+                    <div className="mb-4 text-xs font-mono text-green-600 uppercase tracking-wide">
+                      Success: Bid placed successfully!
+                    </div>
+                  )}
+
                   <div className="flex flex-col mb-8">
                     <p className="text-[9px] text-gray-400 tracking-[0.2em] uppercase font-bold mb-4">
                       PLACE BID
@@ -384,25 +496,14 @@ const AuctionDetailPage = () => {
                         CHF
                       </span>
                       <Input
-                        placeholder="200000000"
+                        placeholder={(Math.max(auction.currentBid || 0, auction.startPrice || 0) + auction.bidIncrement).toString()}
                         className="flex-1"
                         inputClassName="text-xl"
+                        value={bidAmount}
+                        onChange={(e) => setBidAmount(e.target.value)}
                       />
-                      <button className="bg-[#3b8754] hover:bg-[#327347] text-white text-[10px] font-bold tracking-widest uppercase px-4 py-3 ml-4 flex items-center gap-2 transition-colors">
-                        BID PLACED{" "}
-                        <svg
-                          className="w-3.5 h-3.5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M5 13l4 4L19 7"
-                          ></path>
-                        </svg>
+                      <button type="submit" className="bg-[#3b8754] hover:bg-[#327347] text-white text-[10px] font-bold tracking-widest uppercase px-4 py-3 ml-4 flex items-center gap-2 transition-colors cursor-pointer">
+                        PLACE BID
                       </button>
                     </div>
                   </div>
@@ -426,45 +527,31 @@ const AuctionDetailPage = () => {
                       </div>
                     )}
                   </div>
-                </div>
+                </form>
 
-                <div className="bg-[#eef8f1] border border-[#b2ddbe] p-6 mb-8 text-[#256037] flex flex-col items-center justify-center text-center">
-                  <p className="text-[11px] font-bold tracking-[0.15em] uppercase flex items-center gap-2 mb-2">
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                      ></path>
-                    </svg>
-                    BID PLACED — CHF 200000000
-                  </p>
-                  <p className="text-[12px] font-medium opacity-80 mb-6">
-                    You are currently the leading bidder.
-                  </p>
-                  <button className="w-full border border-[#256037]/30 hover:bg-[#256037]/5 py-3 text-[10px] font-bold tracking-[0.15em] uppercase flex items-center justify-center gap-2 transition-colors">
-                    <svg
-                      className="w-3.5 h-3.5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                      ></path>
-                    </svg>
-                    SET BID ALERT & CONTINUE WATCHING
-                  </button>
-                </div>
+                {isLeadingBidder && (
+                  <div className="bg-[#eef8f1] border border-[#b2ddbe] p-6 mb-8 text-[#256037] flex flex-col items-center justify-center text-center">
+                    <p className="text-[11px] font-bold tracking-[0.15em] uppercase flex items-center gap-2 mb-2">
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                        ></path>
+                      </svg>
+                      LEADING BIDDER
+                    </p>
+                    <p className="text-[12px] font-medium opacity-80">
+                      You are currently the leading bidder for this lot.
+                    </p>
+                  </div>
+                )}
               </>
             )}
 
@@ -504,7 +591,7 @@ const AuctionDetailPage = () => {
               </div>
             )}
 
-            {auctionStatus === "lost" && (
+            {auctionStatus === "lost" && !isLive && (
               <div className="bg-[#fcf0f0] border border-[#eabebf] p-8 mb-8 text-[#8c2a2a] flex flex-col items-center justify-center text-center">
                 <div className="w-12 h-12 border-2 border-[#8c2a2a] rounded-full flex items-center justify-center mb-4">
                   <svg
@@ -543,15 +630,6 @@ const AuctionDetailPage = () => {
 
             {/* General Actions */}
             <div className="flex flex-col gap-3 mb-8">
-              <Button
-                fullWidth
-                variant="primary"
-                size="lg"
-                className="py-4 text-[11px]"
-                onClick={handleGoToSettlement}
-              >
-                ACQUIRE INSTANTLY &rarr;
-              </Button>
               <div className="flex gap-3">
                 <Button
                   fullWidth
@@ -561,7 +639,7 @@ const AuctionDetailPage = () => {
                 >
                   <Heart className="w-4 h-4" /> WISHLIST
                 </Button>
-                <div className="w-1/2 py-4 flex items-center justify-center gap-2 text-[11px] text-gray-500 tracking-[0.2em] uppercase font-bold">
+                <div className="w-1/2 py-4 flex items-center justify-center gap-2 text-[11px] text-gray-500 tracking-[0.2em] uppercase font-bold select-none">
                   <ShieldCheck className="w-4 h-4 text-gray-400" /> VAULT
                   SECURED
                 </div>
@@ -576,7 +654,7 @@ const AuctionDetailPage = () => {
                 className="w-full p-5 flex items-center justify-between cursor-pointer hover:bg-cream-light transition-colors"
               >
                 <p className="text-[11px] text-gray-600 tracking-[0.2em] uppercase font-bold">
-                  BID HISTORY ({itemDetails.bidHistory.length})
+                  BID HISTORY ({totalBids})
                 </p>
                 <ChevronDown
                   className={`w-4 h-4 text-gray-400 transition-transform ${isBidHistoryOpen ? "rotate-180" : ""}`}
@@ -584,32 +662,42 @@ const AuctionDetailPage = () => {
               </button>
 
               {isBidHistoryOpen && (
-                <div className="border-t border-[#dcd9ce]">
-                  {itemDetails.bidHistory.map((bid, idx) => (
-                    <div
-                      key={idx}
-                      className={`flex items-center justify-between p-5 ${idx !== itemDetails.bidHistory.length - 1 ? "border-b border-[#dcd9ce]" : ""}`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <p className="text-[13px] font-mono text-black">
-                          Bidder {bid.id}
-                        </p>
-                        {bid.status && (
-                          <span className="bg-black text-white text-[8px] font-bold px-2 py-0.5 tracking-widest uppercase">
-                            {bid.status}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex flex-col items-end">
-                        <p className="text-[14px] font-mono font-bold text-black">
-                          {bid.amount}
-                        </p>
-                        <p className="text-[13px] text-gray-400 font-mono">
-                          {bid.time}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                <div className="border-t border-[#dcd9ce] max-h-80 overflow-y-auto">
+                  {sortedBids.length > 0 ? (
+                    sortedBids.map((bid, idx) => {
+                      const bidderIdStr = typeof bid.userId === "object" ? bid.userId._id || bid.userId.id : bid.userId;
+                      const displayId = bidderIdStr ? `#VLT-${bidderIdStr.substring(18).toUpperCase()}` : '#VLT-ANON';
+                      const isLeadingBid = idx === 0 && isLive;
+                      
+                      return (
+                        <div
+                          key={idx}
+                          className={`flex items-center justify-between p-5 ${idx !== sortedBids.length - 1 ? "border-b border-[#dcd9ce]" : ""}`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <p className="text-[13px] font-mono text-black">
+                              Bidder {displayId}
+                            </p>
+                            {isLeadingBid && (
+                              <span className="bg-black text-white text-[8px] font-bold px-2 py-0.5 tracking-widest uppercase">
+                                LEADING
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex flex-col items-end">
+                            <p className="text-[14px] font-mono font-bold text-black">
+                              CHF {bid.amount.toLocaleString()}
+                            </p>
+                            <p className="text-[13px] text-gray-400 font-mono">
+                              {new Date(bid.createdAt).toLocaleTimeString()}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <p className="p-5 text-center text-xs font-mono uppercase text-gray-400">No bids placed yet.</p>
+                  )}
                 </div>
               )}
             </div>
@@ -632,7 +720,7 @@ const AuctionDetailPage = () => {
           </button>
           <img
             src={selectedImage}
-            alt={itemDetails.title}
+            alt={item.name}
             className="max-h-full max-w-full object-contain"
             onClick={(event) => event.stopPropagation()}
           />
