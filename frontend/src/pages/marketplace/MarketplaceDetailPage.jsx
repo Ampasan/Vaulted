@@ -1,80 +1,165 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useMemo } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Heart, Copy, ShieldCheck, X } from "lucide-react";
 import Navbar from "../../components/layout/Navbar";
 import Footer from "../../components/layout/Footer";
 import Badge from "../../components/ui/Badge";
 import Button from "../../components/ui/Button";
 import PriceHistoryChart from "../../components/features/marketplace/PriceHistoryChart";
-
-const itemDetails = {
-  id: 1,
-  images: [
-    "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&q=80&w=1200",
-    "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?auto=format&fit=crop&q=80&w=400",
-    "https://images.unsplash.com/photo-1587836374828-dd4052f6b3b5?auto=format&fit=crop&q=80&w=400",
-    "https://images.unsplash.com/photo-1622434641406-a158123450f9?auto=format&fit=crop&q=80&w=400",
-  ],
-  maker: "PATEK",
-  category: "HOROLOGY",
-  title: "Cosmograph Daytona 1969",
-  ref: "Ref. 6263",
-  vaultSerial: "GP-6263-1969",
-  condition: "MINT - UNWORN",
-  specsSummary: "37mm - Stainless Steel - Manual Wind",
-  specs: [
-    { label: "MOVEMENT", value: "Valjoux 72B - Manual Wind" },
-    { label: "CASE DIAMETER", value: "37.0 mm" },
-    { label: "CASE MATERIAL", value: "Stainless Steel" },
-    { label: "DIAL", value: "Exotic 'Oyster' Black" },
-    { label: "BRACELET", value: "Original Riveted Steel" },
-    { label: "VAULT SERIAL", value: "GP-6263-1969" },
-  ],
-  acquisitionValue: "CHF 380,000",
-  privateSalePrice: "CHF 450,000",
-  provenance: [
-    { period: "2018 - Present", desc: "Private Collection, Zürich" },
-    { period: "2011 - 2018", desc: "Antiquorum Geneva, Lot 412" },
-    { period: "1978 - 2011", desc: "Original Purchaser, Geneva" },
-  ],
-};
-
-const parsePrice = (price) => {
-  const [currency, ...amountParts] = price.trim().split(/\s+/);
-  return {
-    currency: currency || "CHF",
-    amount: amountParts.join(" ") || "0",
-  };
-};
-
+import assetService from "../../services/assetService";
+import wishlistService from "../../services/wishlistService";
 import useAuth from "../../hooks/useAuth";
 
 const MarketplaceDetailPage = () => {
+  const { id } = useParams();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  
+  const [item, setItem] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isImageFull, setIsImageFull] = useState(false);
-  const selectedImage = itemDetails.images[selectedImageIndex];
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    const fetchItemDetails = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const res = await assetService.getItemById(id);
+        if (res.success && res.data) {
+          setItem(res.data);
+        } else {
+          setError("Item not found");
+        }
+      } catch (err) {
+        console.error("Error fetching item details:", err);
+        setError("Failed to load item details.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchItemDetails();
+  }, [id]);
+
+  const itemDetails = useMemo(() => {
+    if (!item) return null;
+
+    const nameParts = (item.name || '').split(' ');
+    const maker = nameParts[0] || '';
+    const title = nameParts.slice(1).join(' ') || item.name || 'Untitled';
+    const categoryLabel = item.category;
+    const images = item.imageUrl;
+
+    const vaultSerial = `GP-${item._id?.substring(18).toUpperCase()}`;
+
+    const specs = [
+      { label: "STATUS", value: item.status?.replace('_', ' ').toUpperCase() },
+      { label: "VAULT SERIAL", value: vaultSerial },
+      { label: "ACQUISITION DATE", value: new Date(item.createdAt).toLocaleDateString('en-GB') },
+      { label: "OWNER ID", value: item.ownerId ? ("#VLT-ID-" + item.ownerId?._id.substring(item.ownerId?._id.length - 4).toUpperCase()) : "Vaulted Trust" },
+    ];
+
+    const acquisitionValue = `CHF ${Math.round(item.currentPrice * 0.85).toLocaleString()}`;
+    const privateSalePrice = `CHF ${item.currentPrice?.toLocaleString() || "0"}`;
+
+    const provenance = [
+      { period: "Present", desc: `Secured in Vault. Custody managed under certificate ${vaultSerial}.` },
+      { period: "Listed", desc: `Listed on Vaulted Marketplace by owner ${item.ownerId?.name || 'Authorized Member'}.` }
+    ];
+
+    return {
+      id: item._id,
+      images,
+      maker: maker.toUpperCase(),
+      category: categoryLabel.toUpperCase(),
+      title,
+      ref: item.description || "No description provided.",
+      vaultSerial,
+      condition: "AUTHENTICATED & SECURED",
+      specsSummary: `${categoryLabel.toUpperCase()} - Mint Vault Storage`,
+      specs,
+      acquisitionValue,
+      privateSalePrice,
+      provenance,
+      priceHistory: item.priceHistory || [],
+      currentPrice: item.currentPrice,
+    };
+  }, [item]);
+
+  const selectedImage = itemDetails?.images[selectedImageIndex];
 
   const handleAcquireInstantly = () => {
     if (!isAuthenticated) {
-      navigate("/auth", { state: { from: `/marketplace/${itemDetails.id}` } });
+      navigate("/auth", { state: { from: `/marketplace/${id}` } });
       return;
     }
 
-    const { currency, amount } = parsePrice(itemDetails.privateSalePrice);
     navigate("/settlement", {
       state: {
         asset: {
+          id: itemDetails.id,
           image: itemDetails.images[0],
-          title: itemDetails.title,
-          currency,
-          amount,
+          title: `${itemDetails.maker} ${itemDetails.title}`,
+          currency: "CHF",
+          amount: itemDetails.currentPrice,
+          isMarketplacePurchase: true,
         },
-        returnTo: `/marketplace/${itemDetails.id}`,
+        returnTo: `/marketplace/${id}`,
       },
     });
   };
+
+  const handleAddToWishlist = async () => {
+    if (!isAuthenticated) {
+      navigate("/auth", { state: { from: `/marketplace/${id}` } });
+      return;
+    }
+    try {
+      await wishlistService.addToWishlist(id);
+      alert("Added to wishlist successfully!");
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.message || "Failed to add to wishlist (item might already be saved).");
+    }
+  };
+
+  const copySerial = () => {
+    if (itemDetails?.vaultSerial) {
+      navigator.clipboard.writeText(itemDetails.vaultSerial);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col min-h-screen bg-cream text-ink">
+        <Navbar activeLink="marketplace" />
+        <main className="flex-1 flex items-center justify-center">
+          <p className="text-gray-500 font-mono tracking-wider">LOADING ASSET DETAILS...</p>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (error || !itemDetails) {
+    return (
+      <div className="flex flex-col min-h-screen bg-cream text-ink">
+        <Navbar activeLink="marketplace" />
+        <main className="flex-1 flex flex-col items-center justify-center gap-4">
+          <p className="text-red-500 font-mono tracking-wider">{error || "Asset not found"}</p>
+          <Link to="/marketplace" className="text-xs uppercase tracking-widest border-b border-black font-bold">
+            Return to Marketplace
+          </Link>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-cream text-ink">
@@ -150,7 +235,7 @@ const MarketplaceDetailPage = () => {
             <div className="grid grid-cols-2 gap-0 border border-[#dcd9ce] mb-8">
               <div className="p-4 border-r border-[#dcd9ce]">
                 <p className="text-[11px] text-gray-400 tracking-[0.2em] font-bold uppercase mb-2">
-                  CONDITION
+                  STATUS
                 </p>
                 <p className="text-[13px] font-mono font-bold text-black uppercase">
                   {itemDetails.condition}
@@ -174,7 +259,7 @@ const MarketplaceDetailPage = () => {
                   className={`flex justify-between items-center p-4 text-[12px] tracking-widest font-mono ${idx !== itemDetails.specs.length - 1 ? "border-b border-[#dcd9ce]" : ""}`}
                 >
                   <span className="text-gray-400 uppercase">{spec.label}</span>
-                  <span className="text-black font-bold text-right">
+                  <span className="text-black font-bold text-right truncate max-w-64">
                     {spec.value}
                   </span>
                 </div>
@@ -202,16 +287,18 @@ const MarketplaceDetailPage = () => {
                 <button
                   className="hover:text-black transition-colors"
                   title="Copy Serial"
+                  onClick={copySerial}
                 >
                   <Copy className="w-3.5 h-3.5 ml-1" />
                 </button>
+                {copied && <span className="text-emerald-600 text-[9px] lowercase font-mono">copied!</span>}
               </div>
             </div>
 
             {/* Pricing Box */}
             <div className="border border-[#dcd9ce] p-6 md:p-8 mb-8 bg-transparent">
               <p className="text-[11px] text-gray-400 tracking-[0.2em] uppercase font-bold mb-1">
-                ACQUISITION VALUE
+                EST. ACQUISITION VALUE
               </p>
               <p className="text-[13px] font-mono text-gray-400 line-through mb-6">
                 {itemDetails.acquisitionValue}
@@ -228,7 +315,7 @@ const MarketplaceDetailPage = () => {
                 <p className="text-[10px] text-gray-400 tracking-[0.2em] uppercase font-bold mb-2">
                   PRICE HISTORY
                 </p>
-                <PriceHistoryChart />
+                <PriceHistoryChart history={itemDetails.priceHistory} initialPrice={itemDetails.currentPrice} />
               </div>
             </div>
 
@@ -248,6 +335,7 @@ const MarketplaceDetailPage = () => {
                 variant="outline"
                 size="lg"
                 className="py-4 text-[11px] gap-2 border-[#dcd9ce] hover:border-black"
+                onClick={handleAddToWishlist}
               >
                 <Heart className="w-4 h-4" /> ADD TO WISHLIST
               </Button>
@@ -268,20 +356,9 @@ const MarketplaceDetailPage = () => {
                   <div key={idx} className="flex items-start gap-4">
                     <div className="w-1.5 h-1.5 rounded-full bg-gray-300 mt-1.5 shrink-0"></div>
                     <div className="flex-1">
-                      <p className="text-[12px] font-mono text-gray-400 mb-1">
-                        {prov.period.split(" - ").map((p, i) => (
-                          <React.Fragment key={i}>
-                            {i > 0 && (
-                              <span className="mx-1 text-gray-300">-</span>
-                            )}
-                            {p === "Present" ? (
-                              <span className="text-black">{p}</span>
-                            ) : (
-                              p
-                            )}
-                          </React.Fragment>
-                        ))}
-                      </p>
+                      <div className="text-[12px] font-mono text-gray-400 mb-1">
+                        {prov.period}
+                      </div>
                       <p className="text-[13px] font-medium text-black">
                         {prov.desc}
                       </p>

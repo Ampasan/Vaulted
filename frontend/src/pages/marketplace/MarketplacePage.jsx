@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../../components/layout/Navbar';
 import Footer from '../../components/layout/Footer';
@@ -7,15 +7,7 @@ import SearchBar from '../../components/ui/SearchBar';
 import Tabs from '../../components/ui/Tabs';
 import AssetGrid from '../../components/features/asset/AssetGrid';
 import AssetCard from '../../components/features/asset/AssetCard';
-
-const marketplaceData = [
-  { id: 1, image: 'https://picsum.photos/600/800?random=11', featured: true, maker: 'PATEK', title: 'Cosmograph Daytona 1969', ref: 'Ref. 6263', prevPrice: 'CHF 388,000', currPrice: 'CHF 458,000' },
-  { id: 2, image: 'https://picsum.photos/600/800?random=12', featured: false, maker: 'FORMATIGN', title: 'Le Rêve Lithograph 1932', ref: 'Print 4/12', prevPrice: 'CHF 95,000', currPrice: 'CHF 120,000' },
-  { id: 3, image: 'https://picsum.photos/600/800?random=13', featured: false, maker: 'FERRARI', title: 'F3 Carrera GT 1973', ref: 'Chassis 7087267', prevPrice: 'CHF 720,000', currPrice: 'CHF 850,000' },
-  { id: 4, image: 'https://picsum.photos/600/800?random=14', featured: false, maker: 'ROLEX', title: 'Submariner \'Comex\' 1680', ref: 'Ref. 1680 - Comex 1970', prevPrice: 'CHF 145,000', currPrice: 'CHF 165,000' },
-  { id: 5, image: 'https://picsum.photos/600/800?random=15', featured: false, maker: 'BASQUIAT', title: 'Untitled (Skull) 1981', ref: 'Acrylic on canvas - 40x30in', prevPrice: 'CHF 4,200,000', currPrice: 'CHF 5,100,000' },
-  { id: 6, image: 'https://picsum.photos/600/800?random=16', featured: false, maker: 'LAMBORGHINI', title: 'Miura P400 SV 1972', ref: '3.9L V12 - Matching Numbers', prevPrice: 'CHF 2,100,000', currPrice: 'CHF 2,450,000' }
-];
+import assetService from '../../services/assetService';
 
 const marketplaceTabs = [
   { id: 'all', label: 'All Categories' },
@@ -24,57 +16,152 @@ const marketplaceTabs = [
   { id: 'automotive', label: 'Automotive' },
 ];
 
+const getCategoryId = (category = '', name = '', description = '') => {
+  const text = `${category} ${name} ${description}`.toLowerCase();
+  if (text.includes('patek') || text.includes('rolex') || text.includes('watch') || text.includes('nautilus') || text.includes('chronograph') || text.includes('daytona') || text.includes('horology')) {
+    return 'horology';
+  }
+  if (text.includes('ferrari') || text.includes('lamborghini') || text.includes('car') || text.includes('miura') || text.includes('automobiles') || text.includes('automotive') || text.includes('chassis') || text.includes('gt')) {
+    return 'automotive';
+  }
+  if (text.includes('basquiat') || text.includes('art') || text.includes('skull') || text.includes('painting') || text.includes('lithograph') || text.includes('fine-art') || text.includes('fine art')) {
+    return 'fine-art';
+  }
+  return 'horology';
+};
+
+const getCategoryLabel = (category = '', name = '', description = '') => {
+  const catId = getCategoryId(category, name, description);
+  if (catId === 'horology') return 'Horology';
+  if (catId === 'automotive') return 'Automotive';
+  if (catId === 'fine-art') return 'Fine Art';
+  return category || 'Horology';
+};
+
 const Marketplace = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [search, setSearch] = useState('');
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetchItems = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await assetService.getMarketplaceItems();
+      if (res.success && res.data) {
+        const formatted = res.data.map((item) => {
+          const nameParts = (item.name || '').split(' ');
+          const maker = nameParts[0] || '';
+          const title = nameParts.slice(1).join(' ') || item.name || 'Untitled';
+          const categoryId = getCategoryId(item.category, item.name, item.description);
+          const category = getCategoryLabel(item.category, item.name, item.description);
+
+          return {
+            id: item._id,
+            image: Array.isArray(item.imageUrl) && item.imageUrl.length > 0
+              ? item.imageUrl[0]
+              : (typeof item.imageUrl === 'string' && item.imageUrl ? item.imageUrl : 'https://picsum.photos/600/800?random=11'),
+            maker: maker.toUpperCase(),
+            title: title,
+            ref: item.description?.substring(0, 50) || 'Fine Asset',
+            prevPrice: item.priceHistory && item.priceHistory.length > 1
+              ? `CHF ${item.priceHistory[item.priceHistory.length - 2].price.toLocaleString()}`
+              : undefined,
+            currPrice: `CHF ${item.currentPrice?.toLocaleString() || '0'}`,
+            category,
+            categoryId,
+            name: item.name,
+            description: item.description,
+          };
+        });
+        setItems(formatted);
+      }
+    } catch (err) {
+      console.error('Error fetching marketplace items:', err);
+      setError('Failed to load marketplace items.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchItems();
+  }, []);
+
+  const filteredItems = useMemo(() => {
+    return items.filter((item) => {
+      const matchesTab = activeTab === 'all' || item.categoryId === activeTab;
+      const matchesSearch =
+        search.trim() === '' ||
+        item.name.toLowerCase().includes(search.toLowerCase()) ||
+        item.description.toLowerCase().includes(search.toLowerCase());
+      return matchesTab && matchesSearch;
+    });
+  }, [activeTab, search, items]);
 
   return (
     <div className="flex flex-col w-full bg-cream text-ink">
       <Navbar activeLink="marketplace" />
-      
+
       <main className="flex-1 w-full px-6 md:px-12 lg:px-16 xl:px-24 pt-12 pb-32">
-         <Header
-           breadcrumb={<>VAULTED <span className="mx-2">-</span> MARKETPLACE</>}
-           title="Marketplace"
-           description="Curated, authenticated physical assets available for immediate acquisition. No bidding required."
-         />
+        <Header
+          breadcrumb={<>VAULTED <span className="mx-2">-</span> MARKETPLACE</>}
+          title="Marketplace"
+          description="Curated, authenticated physical assets available for immediate acquisition. No bidding required."
+        />
 
-         <div className="mb-10">
-           <SearchBar 
-             placeholder="Search by title, maker, or category..." 
-             value={search}
-             onChange={(e) => setSearch(e.target.value)}
-           />
-         </div>
+        <div className="mb-10">
+          <SearchBar
+            placeholder="Search by title, maker, or category..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
 
-         <div className="mb-12">
-           <Tabs 
-             tabs={marketplaceTabs} 
-             activeTab={activeTab} 
-             onTabChange={setActiveTab} 
-           />
-         </div>
+        <div className="mb-12">
+          <Tabs
+            tabs={marketplaceTabs}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+          />
+        </div>
 
-         <AssetGrid 
-           items={marketplaceData} 
-           columns={3} 
-           renderItem={(item) => (
-             <Link key={item.id} to={`/marketplace/${item.id}`} className="block h-full">
-               <AssetCard
-                 asset={{
-                   ...item,
-                   category: item.maker,
-                   subtitle: item.ref,
-                   price: item.currPrice,
-                   priceLabel: 'Acquisition Value',
-                   aspect: 'marketplace',
-                   showWishlist: true,
-                   actionLabel: <>ACQUIRE INSTANTLY &rarr;</>,
-                 }}
-               />
-             </Link>
-           )} 
-         />
+        {loading ? (
+          <p className="py-16 text-center text-[13px] text-gray-500 font-medium">
+            Loading marketplace items...
+          </p>
+        ) : error ? (
+          <p className="py-16 text-center text-[13px] text-red-500 font-medium">
+            {error}
+          </p>
+        ) : filteredItems.length > 0 ? (
+          <AssetGrid
+            items={filteredItems}
+            columns={3}
+            renderItem={(item) => (
+              <Link key={item.id} to={`/marketplace/${item.id}`} className="block h-full">
+                <AssetCard
+                  asset={{
+                    ...item,
+                    category: item.category,
+                    subtitle: item.ref,
+                    price: item.currPrice,
+                    priceLabel: 'Acquisition Value',
+                    aspect: 'marketplace',
+                    showWishlist: true,
+                    actionLabel: <>ACQUIRE INSTANTLY &rarr;</>,
+                  }}
+                />
+              </Link>
+            )}
+          />
+        ) : (
+          <p className="py-16 text-center text-[13px] text-gray-500 font-medium">
+            No items found matching your filters.
+          </p>
+        )}
       </main>
 
       <Footer />
