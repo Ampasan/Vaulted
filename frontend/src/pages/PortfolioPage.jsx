@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "../components/layout/Navbar";
 import Footer from "../components/layout/Footer";
 import Button from "../components/ui/Button";
@@ -7,117 +8,11 @@ import PortfolioChart from "../components/features/portfolio/PortfolioChart";
 import AllocationChart from "../components/features/portfolio/AllocationChart";
 import AssetCard from "../components/features/asset/AssetCard";
 import HeldAssetRow from "../components/features/portfolio/HeldAssetRow";
-
-const heldAssets = [
-  {
-    id: 1,
-    image:
-      "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&q=80&w=800",
-    title: '"Untitled" 1982',
-    category: "BASQUIAT",
-    price: "CHF 3.20M",
-    acquisitionCost: "CHF 3.20M",
-    priceLabel: "CURRENT VALUE",
-    gain: "+6.0%",
-    listGain: "+0.0%",
-    location: "Geneva Freeport Alpha",
-    status: "in-storage",
-    listStatus: "IN AUCTION",
-    listStatusTone: "auction",
-    date: "2023-05-12",
-  },
-  {
-    id: 2,
-    image:
-      "https://images.unsplash.com/photo-1583121274602-3e2820c69888?auto=format&fit=crop&q=80&w=800",
-    title: "Miura P400 SV 1972",
-    category: "LAMBORGHINI",
-    price: "CHF 2.80M",
-    acquisitionCost: "CHF 2.45M",
-    priceLabel: "CURRENT VALUE",
-    gain: "+14.3%",
-    location: "Monaco Heritage Vault",
-    status: "yield-check-in",
-    listStatus: "VAULT SECURED",
-    listStatusTone: "secured",
-    date: "2022-11-04",
-  },
-  {
-    id: 3,
-    image:
-      "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&q=80&w=800",
-    title: "1962 Ferrari 250 GTO (Shares)",
-    category: "FERRARI",
-    price: "CHF 1.02M",
-    acquisitionCost: "CHF 850,000",
-    priceLabel: "CURRENT VALUE",
-    gain: "+28.0%",
-    listGain: "+20.0%",
-    location: "Zurich Secure Storage",
-    status: "under-contract",
-    listStatus: "LISTED FOR SALE",
-    listStatusTone: "sale",
-    date: "2021-08-21",
-  },
-  {
-    id: 4,
-    image:
-      "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&q=80&w=800",
-    title: "Daytona Ref. 6265",
-    category: "ROLEX",
-    price: "CHF 445,000",
-    acquisitionCost: "CHF 320,000",
-    priceLabel: "CURRENT VALUE",
-    gain: "+39.1%",
-    location: "Geneva Freeport Alpha",
-    status: "yield-check-in",
-    listStatus: "VAULT SECURED",
-    listStatusTone: "secured",
-    date: "2020-03-15",
-  },
-  {
-    id: 5,
-    image:
-      "https://images.unsplash.com/photo-1584916201218-f4242ceb4809?auto=format&fit=crop&q=80&w=800",
-    title: "Birkin 35 Himalaya",
-    category: "HERMÈS",
-    price: "CHF 295,000",
-    acquisitionCost: "CHF 280,000",
-    priceLabel: "CURRENT VALUE",
-    gain: "+5.4%",
-    location: "Geneva Freeport Alpha",
-    status: "sold",
-    listStatus: "SOLD",
-    listStatusTone: "sold",
-    date: "2023-09-02",
-  },
-  {
-    id: 6,
-    image:
-      "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?auto=format&fit=crop&q=80&w=800",
-    title: "Nautilus 5711/1A",
-    category: "PATEK PHILIPPE",
-    price: "CHF 165,000",
-    acquisitionCost: "CHF 125,000",
-    priceLabel: "CURRENT VALUE",
-    gain: "+32.0%",
-    location: "Geneva Freeport Alpha",
-    status: "in-storage",
-    listStatus: "IN AUCTION",
-    listStatusTone: "auction",
-    date: "2021-12-10",
-  },
-];
+import assetService from "../services/assetService";
 
 const parsePrice = (priceStr) => {
   if (!priceStr) return 0;
-  let numStr = priceStr.replace(/[^0-9.M]/g, "");
-  let multiplier = 1;
-  if (numStr.includes("M")) {
-    multiplier = 1000000;
-    numStr = numStr.replace("M", "");
-  }
-  return parseFloat(numStr) * multiplier;
+  return parseFloat(priceStr.replace(/[^0-9.]/g, ""));
 };
 
 const parseGain = (gainStr) => {
@@ -126,21 +21,127 @@ const parseGain = (gainStr) => {
 };
 
 const PortfolioPage = () => {
+  const navigate = useNavigate();
   const [viewMode, setViewMode] = useState("grid");
   const [sortBy, setSortBy] = useState("value");
+  const [items, setItems] = useState([]);
+  const [rawItems, setRawItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchCollection = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const res = await assetService.getMyCollection();
+        if (res.success && res.data) {
+          const formatted = res.data.map((item) => {
+            const nameParts = (item.name || "").split(" ");
+            const maker = nameParts[0] || "Unknown";
+            const titleOnly = nameParts.slice(1).join(" ") || item.name || "Untitled";
+
+            const acqCost = item.priceHistory && item.priceHistory.length > 0
+              ? item.priceHistory[0].price
+              : item.currentPrice || 0;
+
+            const currentPrice = item.currentPrice || 0;
+            const gainVal = acqCost > 0 ? ((currentPrice - acqCost) / acqCost) * 100 : 0;
+            const gainStr = `${gainVal >= 0 ? "+" : ""}${gainVal.toFixed(1)}%`;
+
+            let status = "in-storage";
+            let listStatus = "VAULT SECURED";
+            let listStatusTone = "secured";
+
+            if (item.status === "listed_marketplace") {
+              status = "under-contract";
+              listStatus = "LISTED FOR SALE";
+              listStatusTone = "sale";
+            } else if (item.status === "in_auction") {
+              status = "in-storage";
+              listStatus = "IN AUCTION";
+              listStatusTone = "auction";
+            } else if (item.status === "sold") {
+              status = "sold";
+              listStatus = "SOLD";
+              listStatusTone = "sold";
+            }
+
+            return {
+              id: item._id,
+              image: Array.isArray(item.imageUrl) && item.imageUrl.length > 0
+                ? item.imageUrl[0]
+                : item.imageUrl,
+              title: titleOnly,
+              category: maker.toUpperCase(),
+              price: `CHF ${currentPrice.toLocaleString()}`,
+              acquisitionCost: `CHF ${acqCost.toLocaleString()}`,
+              priceLabel: "CURRENT VALUE",
+              gain: gainStr,
+              location: "Geneva Freeport Alpha",
+              status,
+              listStatus,
+              listStatusTone,
+              date: item.createdAt,
+            };
+          });
+          setItems(formatted);
+          setRawItems(res.data);
+        }
+      } catch (err) {
+        console.error("Failed to load collection:", err);
+        setError("Failed to load collection items.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCollection();
+  }, []);
 
   const sortedAssets = useMemo(() => {
-    return [...heldAssets].sort((a, b) => {
+    const list = items;
+    return [...list].sort((a, b) => {
       if (sortBy === "value") {
-        return parsePrice(b.price) - parsePrice(a.price); // Descending value
+        return parsePrice(b.price) - parsePrice(a.price);
       } else if (sortBy === "gain") {
-        return parseGain(b.gain) - parseGain(a.gain); // Descending gain
+        return parseGain(b.gain) - parseGain(a.gain);
       } else if (sortBy === "date") {
-        return new Date(b.date) - new Date(a.date); // Newest date first
+        return new Date(b.date) - new Date(a.date);
       }
       return 0;
     });
-  }, [sortBy]);
+  }, [sortBy, items]);
+
+  const summary = useMemo(() => {
+    const list = items.length > 0 ? items : [];
+    
+    const totalValue = list.reduce((sum, item) => {
+      return sum + parsePrice(item.price);
+    }, 0);
+
+    const totalAcqCost = list.reduce((sum, item) => {
+      return sum + parsePrice(item.acquisitionCost);
+    }, 0);
+
+    const gainAmount = totalValue - totalAcqCost;
+    const gainPercent = totalAcqCost > 0 ? (gainAmount / totalAcqCost) * 100 : 0;
+    const activeBids = list.filter(item => item.listStatus === "IN AUCTION").length;
+
+    const formatM = (val) => {
+      if (val >= 1000000) return `CHF ${(val / 1000000).toFixed(2)}M`;
+      return `CHF ${val.toLocaleString()}`;
+    };
+
+    return {
+      totalValue: formatM(totalValue),
+      totalAcqCost: formatM(totalAcqCost),
+      gainAmount: `${gainAmount >= 0 ? "+" : "-"}CHF ${Math.abs(gainAmount).toLocaleString()}`,
+      gainPercent: `${gainPercent >= 0 ? "+" : ""}${gainPercent.toFixed(1)}%`,
+      activeBids: activeBids.toString().padStart(2, "0"),
+      count: list.length,
+    };
+  }, [items]);
 
   return (
     <div className="flex flex-col min-h-screen bg-cream text-ink">
@@ -149,19 +150,15 @@ const PortfolioPage = () => {
       <main className="flex-1 max-w-360 w-full mx-auto px-6 lg:px-12 py-12">
         {/* Header */}
         <div className="mb-12">
-          <a
-            href="#"
-            className="inline-flex items-center text-[11px] tracking-[0.2em] font-bold text-gray-400 hover:text-black uppercase mb-8 transition-colors"
-          >
-            VAULTED <span className="mx-2 text-gray-300">-</span> COLLECTION
-            PORTFOLIO
-          </a>
+          <span className="inline-flex items-center text-[11px] tracking-[0.2em] font-bold text-gray-400 uppercase mb-8">
+            VAULTED <span className="mx-2 text-gray-300">-</span> COLLECTION PORTFOLIO
+          </span>
 
           <div className="flex justify-between items-end">
             <h1 className="text-5xl md:text-6xl font-black tracking-tight">
               My Portfolio
             </h1>
-            <Button variant="primary" size="md" className="gap-2">
+            <Button variant="primary" size="md" className="gap-2" onClick={() => navigate("/asset")}>
               MAKE A ASSET{" "}
               <svg
                 className="w-3 h-3"
@@ -187,19 +184,21 @@ const PortfolioPage = () => {
               TOTAL VAULT VALUE
             </p>
             <p className="text-2xl font-mono text-black font-bold mb-1">
-              CHF 7.92M
+              {items.length > 0 ? summary.totalValue : "CHF 7.92M"}
             </p>
-            <p className="text-[13px] text-gray-400 font-mono">6 assets</p>
+            <p className="text-[13px] text-gray-400 font-mono">
+              {items.length > 0 ? `${summary.count} assets` : "6 assets"}
+            </p>
           </div>
           <div className="p-6 border-b md:border-b-0 md:border-r border-[#dcd9ce]">
             <p className="text-[10px] text-gray-400 uppercase tracking-[0.2em] font-bold mb-4">
               UNREALIZED GAIN
             </p>
-            <p className="text-2xl font-mono text-green-600 font-bold mb-1">
-              +CHF 700,000
+            <p className={`text-2xl font-mono font-bold mb-1 ${items.length > 0 && summary.gainAmount.startsWith("-") ? "text-red-600" : "text-green-600"}`}>
+              {items.length > 0 ? summary.gainAmount : "+CHF 700,000"}
             </p>
             <p className="text-[13px] text-gray-400 font-mono">
-              +9.7% since acquisition
+              {items.length > 0 ? `${summary.gainPercent} since acquisition` : "+9.7% since acquisition"}
             </p>
           </div>
           <div className="p-6 border-b md:border-b-0 md:border-r border-[#dcd9ce]">
@@ -207,7 +206,7 @@ const PortfolioPage = () => {
               ACQUISITION COST
             </p>
             <p className="text-2xl font-mono text-black font-bold mb-1">
-              CHF 7.22M
+              {items.length > 0 ? summary.totalAcqCost : "CHF 7.22M"}
             </p>
             <p className="text-[13px] text-gray-400 font-mono">
               Total deployed capital
@@ -217,7 +216,9 @@ const PortfolioPage = () => {
             <p className="text-[10px] text-gray-400 uppercase tracking-[0.2em] font-bold mb-4">
               ACTIVE BIDS
             </p>
-            <p className="text-2xl font-mono text-black font-bold mb-1">02</p>
+            <p className="text-2xl font-mono text-black font-bold mb-1">
+              {items.length > 0 ? summary.activeBids : "02"}
+            </p>
             <p className="text-[13px] text-gray-400 font-mono">
               Live auction rooms
             </p>
@@ -227,10 +228,10 @@ const PortfolioPage = () => {
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-24 h-auto">
           <div className="lg:col-span-2 h-80">
-            <PortfolioChart />
+            <PortfolioChart items={rawItems} />
           </div>
           <div className="lg:col-span-1 h-80">
-            <AllocationChart />
+            <AllocationChart items={rawItems} />
           </div>
         </div>
 
@@ -272,7 +273,15 @@ const PortfolioPage = () => {
             </div>
           </div>
 
-          {viewMode === "grid" ? (
+          {loading ? (
+            <p className="py-16 text-center text-[13px] text-gray-500 font-medium">
+              Loading portfolio assets...
+            </p>
+          ) : error ? (
+            <p className="py-16 text-center text-[13px] text-red-500 font-medium">
+              {error}
+            </p>
+          ) : viewMode === "grid" ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {sortedAssets.map((asset) => (
                 <AssetCard
