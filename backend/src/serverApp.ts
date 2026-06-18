@@ -14,6 +14,7 @@ import transactionRoutes from "./routes/transactionRoutes";
 import wishlistRoutes from "./routes/wishlistRoutes";
 import notificationRoutes from "./routes/notificationRoutes";
 import dashboardRoutes from "./routes/dashboardRoutes";
+import paymentRoutes from "./routes/paymentRoutes";
 
 export const createApp = () => {
   const app = express();
@@ -42,6 +43,7 @@ export const createApp = () => {
   app.use("/api/wishlist", wishlistRoutes);
   app.use("/api/notifications", notificationRoutes);
   app.use("/api/dashboard", dashboardRoutes);
+  app.use("/api/payments", paymentRoutes);
 
   app.use(errorMiddleware);
 

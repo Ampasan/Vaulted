@@ -4,7 +4,8 @@ export type NotificationType =
   | "outbid"
   | "auction_ending"
   | "auction_won"
-  | "transaction_success";
+  | "transaction_success"
+  | "transaction_failed";
 
 export interface INotification extends Document {
   userId: Types.ObjectId;
@@ -21,7 +22,7 @@ const notificationSchema = new Schema<INotification>(
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
     type: {
       type: String,
-      enum: ["outbid", "auction_ending", "auction_won", "transaction_success"],
+      enum: ["outbid", "auction_ending", "auction_won", "transaction_success", "transaction_failed"],
       required: true,
     },
     message: { type: String, required: true },

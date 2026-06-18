@@ -1,7 +1,7 @@
 import mongoose, { Document, Schema, Types } from "mongoose";
 
 export type TransactionType = "marketplace_purchase" | "auction_win";
-export type TransactionStatus = "completed" | "failed";
+export type TransactionStatus = "completed" | "failed" | "pending";
 
 export interface ITransaction extends Document {
   buyerId: Types.ObjectId;
@@ -27,7 +27,7 @@ const transactionSchema = new Schema<ITransaction>(
     },
     status: {
       type: String,
-      enum: ["completed", "failed"],
+      enum: ["completed", "failed", "pending"],
       default: "completed",
     },
   },
