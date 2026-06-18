@@ -5,6 +5,7 @@ import { Transaction } from "../models/Transaction";
 import { User } from "../models/User";
 import { ApiError } from "../utils/ApiError";
 import { createNotification, getSocketServer } from "./notificationService";
+import { getUserTierDetails, assertBuyerTierAccess } from "./userService";
 
 const getMinBidIncrement = (): number => {
   return Number(process.env.MIN_BID_INCREMENT ?? 1000);
@@ -50,6 +51,18 @@ export const placeBidOnAuction = async (
     if (!bidder) {
       throw new ApiError(404, "User not found");
     }
+
+    const item = await Item.findById(auction.itemId).session(session);
+    if (!item) {
+      throw new ApiError(404, "Item not found");
+    }
+
+    const buyerTierDetails = await getUserTierDetails(bidder._id);
+    if (!buyerTierDetails) {
+      throw new ApiError(404, "User not found");
+    }
+
+    assertBuyerTierAccess(buyerTierDetails.tier, item);
 
     if (bidder.balance < amount) {
       throw new ApiError(400, "Insufficient balance");

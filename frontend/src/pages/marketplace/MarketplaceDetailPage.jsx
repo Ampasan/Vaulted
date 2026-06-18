@@ -9,6 +9,7 @@ import PriceHistoryChart from "../../components/features/marketplace/PriceHistor
 import assetService from "../../services/assetService";
 import wishlistService from "../../services/wishlistService";
 import useAuth from "../../hooks/useAuth";
+import { getEffectiveBuyerTier, formatBuyerTierLabel } from "../../utils/tierUtils";
 
 const MarketplaceDetailPage = () => {
   const { id } = useParams();
@@ -70,6 +71,9 @@ const MarketplaceDetailPage = () => {
       { period: "Listed", desc: `Listed on Vaulted Marketplace by owner ${item.ownerId?.name || 'Authorized Member'}.` }
     ];
 
+    const requiredTier = getEffectiveBuyerTier(item);
+    const requiredTierLabel = formatBuyerTierLabel(requiredTier);
+
     return {
       id: item._id,
       images,
@@ -86,6 +90,8 @@ const MarketplaceDetailPage = () => {
       provenance,
       priceHistory: item.priceHistory || [],
       currentPrice: item.currentPrice,
+      requiredTier,
+      requiredTierLabel,
     };
   }, [item]);
 
@@ -281,6 +287,13 @@ const MarketplaceDetailPage = () => {
               <p className="text-[14px] font-medium text-gray-500 mb-6">
                 {itemDetails.ref}
               </p>
+              {itemDetails.requiredTierLabel && (
+                <div className="mb-6">
+                  <Badge variant="outline" className="text-[10px] tracking-[0.15em] uppercase">
+                    Requires {itemDetails.requiredTierLabel}
+                  </Badge>
+                </div>
+              )}
               <div className="flex items-center gap-2 text-[11px] tracking-[0.2em] font-bold text-gray-400 uppercase">
                 VAULT SERIAL:{" "}
                 <span className="text-black">{itemDetails.vaultSerial}</span>

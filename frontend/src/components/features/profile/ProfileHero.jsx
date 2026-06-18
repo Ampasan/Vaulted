@@ -12,8 +12,8 @@ const ProfileHero = ({
   avatarSrc,
   memberId,
   memberSince,
-  tier = 'Platinum Collector',
-  identityVerified = true,
+  tier = 'Unverified Collector',
+  identityVerified = false,
   className = '',
 }) => {
   const navigate = useNavigate();

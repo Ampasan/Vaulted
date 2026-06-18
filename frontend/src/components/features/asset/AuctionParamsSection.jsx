@@ -87,6 +87,16 @@ const AuctionParamsSection = ({ values, onChange }) => {
             />
           </div>
         </div>
+
+        {values.buyNowEnabled && (
+          <Input
+            {...mutedInputProps}
+            label="Buy Now Price (CHF)"
+            placeholder="Price at which buyer can purchase immediately"
+            value={values.buyNowPrice}
+            onChange={handleChange('buyNowPrice')}
+          />
+        )}
       </div>
     </section>
   );

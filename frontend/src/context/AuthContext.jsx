@@ -83,6 +83,23 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateProfile = async (data) => {
+    setLoading(true);
+    try {
+      const res = await authService.updateProfile(data);
+      if (res.success && res.data) {
+        setUser(res.data);
+        return { success: true };
+      }
+      return { success: false, error: res.message || 'Profile update failed' };
+    } catch (error) {
+      const errorMsg = error.response?.data?.message || 'Profile update failed';
+      return { success: false, error: errorMsg };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem('token');
     setUser(null);
@@ -95,6 +112,7 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     googleLogin: handleGoogleLogin,
+    updateProfile,
     logout,
   };
 

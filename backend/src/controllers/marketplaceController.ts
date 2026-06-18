@@ -7,6 +7,7 @@ import { ApiError } from "../utils/ApiError";
 import { asyncHandler } from "../utils/asyncHandler";
 import { listMarketplaceSchema } from "../validations/itemValidation";
 import { createNotification } from "../services/notificationService";
+import { getUserTierDetails, assertBuyerTierAccess } from "../services/userService";
 
 export const getMarketplaceItems = asyncHandler(async (_req: Request, res: Response) => {
   const items = await Item.find({ status: "listed_marketplace" })
@@ -72,6 +73,13 @@ export const buyMarketplaceItem = asyncHandler(async (req: Request, res: Respons
     if (!buyer || !seller) {
       throw new ApiError(404, "User not found");
     }
+
+    const buyerTierDetails = await getUserTierDetails(buyer._id);
+    if (!buyerTierDetails) {
+      throw new ApiError(404, "User not found");
+    }
+
+    assertBuyerTierAccess(buyerTierDetails.tier, item);
 
     if (buyer.balance < item.currentPrice) {
       throw new ApiError(400, "Insufficient balance");

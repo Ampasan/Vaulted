@@ -27,18 +27,17 @@ const conditionOptions = [
 ];
 
 const buyerTierOptions = [
-  { value: '', label: 'Select tier' },
-  { value: 'standard', label: 'Standard Verified' },
-  { value: 'premium', label: 'Premium Collector' },
-  { value: 'institutional', label: 'Institutional' },
+  { value: '', label: 'No restriction' },
+  { value: 'Normal', label: 'Normal Verified' },
+  { value: 'Elite', label: 'Elite Collector' },
+  { value: 'Platinum', label: 'Platinum Collector' },
 ];
 
 const extrasRatingOptions = [
-  { value: '', label: 'Select requirement' },
-  { value: 'none', label: 'None Required' },
-  { value: 'tier-2', label: 'Tier 2 Verified' },
-  { value: 'tier-3', label: 'Tier 3 Accredited' },
-  { value: 'institutional', label: 'Institutional Only' },
+  { value: '', label: 'No restriction' },
+  { value: 'Normal', label: 'Normal Verified' },
+  { value: 'Elite', label: 'Elite Collector' },
+  { value: 'Platinum', label: 'Platinum Collector' },
 ];
 
 const mutedInputProps = {

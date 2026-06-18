@@ -6,18 +6,26 @@ import { ApiError } from "../utils/ApiError";
 import { asyncHandler } from "../utils/asyncHandler";
 import { signToken } from "../middlewares/authMiddleware";
 import { googleLoginSchema, loginSchema, registerSchema, updateProfileSchema } from "../validations/authValidation";
+import { getUserTierDetails } from "../services/userService";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-const sanitizeUser = (user: InstanceType<typeof User>) => ({
-  id: user._id,
-  name: user.name,
-  email: user.email,
-  location: user.location,
-  phoneNumber: user.phoneNumber,
-  balance: user.balance,
-  createdAt: user.createdAt,
-});
+
+const sanitizeUserAsync = async (user: InstanceType<typeof User>) => {
+  const details = await getUserTierDetails(user._id);
+  return {
+    id: user._id,
+    name: user.name,
+    email: user.email,
+    location: user.location,
+    phoneNumber: user.phoneNumber,
+    balance: user.balance,
+    createdAt: user.createdAt,
+    tier: details?.tier || "Unverified",
+    identityVerified: details?.identityVerified || false,
+    portfolioValue: details?.portfolioValue || 0,
+  };
+};
 
 export const register = asyncHandler(async (req: Request, res: Response) => {
   const data = registerSchema.parse(req.body);
@@ -43,7 +51,7 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
   res.status(201).json({
     success: true,
     data: {
-      user: sanitizeUser(user),
+      user: await sanitizeUserAsync(user),
       token,
     },
     message: "Registration successful",
@@ -76,7 +84,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
   res.json({
     success: true,
     data: {
-      user: sanitizeUser(user),
+      user: await sanitizeUserAsync(user),
       token,
     },
     message: "Login successful",
@@ -130,7 +138,7 @@ export const googleLogin = asyncHandler(async (req: Request, res: Response) => {
   res.json({
     success: true,
     data: {
-      user: sanitizeUser(user),
+      user: await sanitizeUserAsync(user),
       token,
     },
     message: "Google login successful",
@@ -145,7 +153,7 @@ export const getMe = asyncHandler(async (req: Request, res: Response) => {
 
   res.json({
     success: true,
-    data: sanitizeUser(user),
+    data: await sanitizeUserAsync(user),
   });
 });
 
@@ -165,7 +173,7 @@ export const updateProfile = asyncHandler(async (req: Request, res: Response) =>
 
   res.json({
     success: true,
-    data: sanitizeUser(user),
+    data: await sanitizeUserAsync(user),
     message: "Profile updated successfully",
   });
 });

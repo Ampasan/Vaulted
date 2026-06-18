@@ -9,7 +9,9 @@ export const createItemSchema = z.object({
   category: z.string().optional(),
   year: z.string().optional(),
   condition: z.string().optional(),
-  buyerTier: z.string().optional(),
+  buyerTier: z
+    .union([z.enum(["Normal", "Elite", "Platinum"]), z.literal("")])
+    .optional(),
   extrasRating: z.string().optional(),
   verificationDocument: z.string().optional(),
 });

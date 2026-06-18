@@ -8,14 +8,7 @@ import IdentityContact from '../components/features/profile/IdentityContact';
 import VerificationStatus from '../components/features/profile/VerificationStatus';
 import TransactionPreview from '../components/features/profile/TransactionPreview';
 import useTransactions from '../hooks/useTransactions';
-
-const profileData = {
-  verificationItems: [
-    { label: 'Identity (KYC)', status: 'verified', statusLabel: 'Verified' },
-    { label: 'Proof of Funds', status: 'verified', statusLabel: 'Verified' },
-    { label: 'Accredited Investor', status: 'pending', statusLabel: 'Pending Review' },
-  ]
-};
+import { formatUserTierLabel } from '../utils/tierUtils';
 
 const getInitials = (name) => {
   if (!name) return '';
@@ -81,6 +74,29 @@ const ProfilePage = () => {
     });
   };
 
+  const isVerified = Boolean(user.identityVerified);
+  const tierName = formatUserTierLabel(user.tier);
+  const portfolioValue = user.portfolioValue ?? 0;
+  const isEliteOrAbove = user.tier === 'Elite' || user.tier === 'Platinum';
+
+  const verificationItems = [
+    {
+      label: 'Identity (KYC)',
+      status: isVerified ? 'verified' : 'pending',
+      statusLabel: isVerified ? 'Verified' : 'Action Required',
+    },
+    {
+      label: 'Proof of Funds',
+      status: portfolioValue >= 300000 ? 'verified' : 'pending',
+      statusLabel: portfolioValue >= 300000 ? 'Verified' : 'Pending Review',
+    },
+    {
+      label: 'Accredited Investor',
+      status: isEliteOrAbove ? 'verified' : 'pending',
+      statusLabel: isEliteOrAbove ? 'Verified' : 'Pending Review',
+    },
+  ];
+
   return (
     <div className="flex flex-col w-full bg-cream text-ink min-h-screen">
       <Navbar activeLink="profile" />
@@ -90,12 +106,14 @@ const ProfilePage = () => {
         initials={initials}
         memberId={memberId}
         memberSince={memberSince}
+        tier={tierName}
+        identityVerified={isVerified}
       />
 
       <main className="flex-1 w-full px-6 md:px-12 lg:px-16 xl:px-24 pt-10 md:pt-12 pb-20 md:pb-32">
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_390px] xl:grid-cols-[minmax(0,1fr)_470px] gap-10 lg:gap-12 mb-16 md:mb-20">
           <IdentityContact fields={identityFields} onSave={handleSaveProfile} />
-          <VerificationStatus items={profileData.verificationItems} />
+          <VerificationStatus items={verificationItems} />
         </div>
 
         {txLoading ? (
