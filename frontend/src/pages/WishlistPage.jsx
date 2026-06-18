@@ -60,7 +60,9 @@ const WishlistPage = () => {
           return {
             id: itemData._id || item._id,
             wishlistId: item._id,
-            image: itemData.imageUrl || 'https://picsum.photos/200/160?random=31',
+            image: Array.isArray(itemData.imageUrl) && itemData.imageUrl.length > 0
+              ? itemData.imageUrl[0]
+              : itemData.imageUrl,
             maker: maker,
             title: title,
             category: getCategoryLabel(catId),
