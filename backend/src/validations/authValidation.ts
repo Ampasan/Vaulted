@@ -14,3 +14,12 @@ export const loginSchema = z.object({
 export const googleLoginSchema = z.object({
   idToken: z.string().min(1, "Google ID token is required"),
 });
+
+export const updateProfileSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters").optional(),
+  location: z.string().optional(),
+  phoneNumber: z.string()
+    .regex(/^\+[1-9]\d{1,14}$/, "Phone number must include a valid country code (e.g., +41)")
+    .optional()
+    .or(z.literal("")),
+});

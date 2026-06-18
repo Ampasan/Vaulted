@@ -5,6 +5,8 @@ export interface IUser extends Document {
   email: string;
   passwordHash?: string;
   googleId?: string;
+  location?: string;
+  phoneNumber?: string;
   balance: number;
   createdAt: Date;
   updatedAt: Date;
@@ -16,6 +18,8 @@ const userSchema = new Schema<IUser>(
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     passwordHash: { type: String },
     googleId: { type: String, unique: true, sparse: true },
+    location: { type: String, trim: true },
+    phoneNumber: { type: String, trim: true },
     balance: { type: Number, default: 0 },
   },
   { timestamps: true }

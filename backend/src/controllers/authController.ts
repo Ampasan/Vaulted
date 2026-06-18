@@ -5,7 +5,7 @@ import { User } from "../models/User";
 import { ApiError } from "../utils/ApiError";
 import { asyncHandler } from "../utils/asyncHandler";
 import { signToken } from "../middlewares/authMiddleware";
-import { googleLoginSchema, loginSchema, registerSchema } from "../validations/authValidation";
+import { googleLoginSchema, loginSchema, registerSchema, updateProfileSchema } from "../validations/authValidation";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -13,6 +13,8 @@ const sanitizeUser = (user: InstanceType<typeof User>) => ({
   id: user._id,
   name: user.name,
   email: user.email,
+  location: user.location,
+  phoneNumber: user.phoneNumber,
   balance: user.balance,
   createdAt: user.createdAt,
 });
@@ -146,3 +148,26 @@ export const getMe = asyncHandler(async (req: Request, res: Response) => {
     data: sanitizeUser(user),
   });
 });
+
+export const updateProfile = asyncHandler(async (req: Request, res: Response) => {
+  const data = updateProfileSchema.parse(req.body);
+
+  const user = await User.findById(req.user!.id);
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  if (data.name !== undefined) user.name = data.name;
+  if (data.location !== undefined) user.location = data.location;
+  if (data.phoneNumber !== undefined) user.phoneNumber = data.phoneNumber;
+
+  await user.save();
+
+  res.json({
+    success: true,
+    data: sanitizeUser(user),
+    message: "Profile updated successfully",
+  });
+});
+
+

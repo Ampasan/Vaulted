@@ -64,12 +64,22 @@ const ProfilePage = () => {
   const memberId = getMemberId(user.id);
   const memberSince = formatMemberSince(user.createdAt);
 
+  const { updateProfile } = useAuth();
+
   const identityFields = [
-    { label: 'Full Name', value: user.name },
-    { label: 'Email Address', value: user.email },
-    { label: 'Location', value: 'Zurich, Switzerland' },
-    { label: 'Phone Number', value: '+41 44 234 11 00' },
+    { label: 'Full Name', key: 'name', value: user.name },
+    { label: 'Email Address', key: 'email', value: user.email, readOnly: true },
+    { label: 'Location', key: 'location', value: user.location || 'N/A' },
+    { label: 'Phone Number', key: 'phoneNumber', value: user.phoneNumber || 'N/A' },
   ];
+
+  const handleSaveProfile = async (data) => {
+    await updateProfile({
+      name: data.name,
+      location: data.location,
+      phoneNumber: data.phoneNumber
+    });
+  };
 
   return (
     <div className="flex flex-col w-full bg-cream text-ink min-h-screen">
@@ -84,7 +94,7 @@ const ProfilePage = () => {
 
       <main className="flex-1 w-full px-6 md:px-12 lg:px-16 xl:px-24 pt-10 md:pt-12 pb-20 md:pb-32">
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_390px] xl:grid-cols-[minmax(0,1fr)_470px] gap-10 lg:gap-12 mb-16 md:mb-20">
-          <IdentityContact fields={identityFields} />
+          <IdentityContact fields={identityFields} onSave={handleSaveProfile} />
           <VerificationStatus items={profileData.verificationItems} />
         </div>
 
