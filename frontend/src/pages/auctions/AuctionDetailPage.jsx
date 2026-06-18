@@ -19,6 +19,7 @@ import StatusDot from "../../components/ui/StatusDot";
 import PriceHistoryChart from "../../components/features/marketplace/PriceHistoryChart";
 import useAuth from "../../hooks/useAuth";
 import assetService from "../../services/assetService";
+import { getEffectiveBuyerTier, formatBuyerTierLabel } from "../../utils/tierUtils";
 
 const AuctionDetailPage = () => {
   const { id } = useParams();
@@ -109,9 +110,15 @@ const AuctionDetailPage = () => {
     if (typeof item.imageUrl === "string" && item.imageUrl) {
       return [item.imageUrl];
     }
+    return [];
   }, [item]);
 
-  const selectedImage = images[selectedImageIndex];
+  const selectedImage = images[selectedImageIndex] ?? images[0];
+
+  const requiredTierLabel = useMemo(
+    () => formatBuyerTierLabel(getEffectiveBuyerTier(item)),
+    [item]
+  );
 
   const nameParts = useMemo(() => (item.name || "").split(" "), [item]);
   const maker = nameParts[0] || "";
@@ -421,6 +428,13 @@ const AuctionDetailPage = () => {
               <p className="text-[15px] font-medium text-gray-500 mb-6">
                 {item.description || "No description provided."}
               </p>
+              {requiredTierLabel && (
+                <div className="mb-6">
+                  <Badge variant="outline" className="text-[10px] tracking-[0.15em] uppercase">
+                    Requires {requiredTierLabel}
+                  </Badge>
+                </div>
+              )}
             </div>
 
             {/* Time Remaining / Commencing */}
