@@ -34,3 +34,44 @@ export const formatUserTierLabel = (tier) => {
   if (!tier || tier === 'Unverified') return 'Unverified Collector';
   return `${tier} Collector`;
 };
+
+const TIER_LEVELS = {
+  Unverified: 0,
+  Normal: 1,
+  Elite: 2,
+  Platinum: 3,
+};
+
+export const getTierLevel = (tier) => {
+  if (!tier) return 0;
+  const normalized = normalizeBuyerTier(tier);
+  if (normalized) return TIER_LEVELS[normalized];
+  if (tier in TIER_LEVELS) return TIER_LEVELS[tier];
+  return 0;
+};
+
+export const checkBuyerTierAccess = (userTier, item) => {
+  const requiredTier = getEffectiveBuyerTier(item);
+
+  if (!requiredTier) {
+    return { allowed: true };
+  }
+
+  const buyerLevel = getTierLevel(userTier);
+  if (buyerLevel === 0) {
+    return {
+      allowed: false,
+      message: 'Complete your identity verification to access this item.',
+    };
+  }
+
+  const requiredLevel = getTierLevel(requiredTier);
+  if (requiredLevel > buyerLevel) {
+    return {
+      allowed: false,
+      message: `This item requires ${formatBuyerTierLabel(requiredTier)}. Your current tier is ${formatUserTierLabel(userTier)}.`,
+    };
+  }
+
+  return { allowed: true };
+};

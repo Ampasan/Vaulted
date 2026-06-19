@@ -19,7 +19,7 @@ import StatusDot from "../../components/ui/StatusDot";
 import PriceHistoryChart from "../../components/features/marketplace/PriceHistoryChart";
 import useAuth from "../../hooks/useAuth";
 import assetService from "../../services/assetService";
-import { getEffectiveBuyerTier, formatBuyerTierLabel } from "../../utils/tierUtils";
+import { getEffectiveBuyerTier, formatBuyerTierLabel, checkBuyerTierAccess } from "../../utils/tierUtils";
 
 const AuctionDetailPage = () => {
   const { id } = useParams();
@@ -75,6 +75,11 @@ const AuctionDetailPage = () => {
       return;
     }
 
+    if (!tierAccess.allowed) {
+      setBidError(tierAccess.message);
+      return;
+    }
+
     const amount = Number(bidAmount);
     if (!amount || isNaN(amount)) {
       setBidError("Please enter a valid bid amount.");
@@ -119,6 +124,12 @@ const AuctionDetailPage = () => {
     () => formatBuyerTierLabel(getEffectiveBuyerTier(item)),
     [item]
   );
+
+  const tierAccess = useMemo(() => {
+    if (!item || Object.keys(item).length === 0) return { allowed: true };
+    if (!isAuthenticated) return { allowed: true };
+    return checkBuyerTierAccess(user?.tier, item);
+  }, [item, user?.tier, isAuthenticated]);
 
   const nameParts = useMemo(() => (item.name || "").split(" "), [item]);
   const maker = nameParts[0] || "";
@@ -181,6 +192,10 @@ const AuctionDetailPage = () => {
   const handleGoToSettlement = () => {
     if (!isAuthenticated) {
       navigate("/auth", { state: { from: `/auctions/${id}` } });
+      return;
+    }
+
+    if (!tierAccess.allowed) {
       return;
     }
 
@@ -489,8 +504,18 @@ const AuctionDetailPage = () => {
             )}
             {isLive && (
               <>
+                {!tierAccess.allowed && (
+                  <div className="border border-amber-200 bg-amber-50 px-4 py-3 mb-6 text-[11px] font-mono text-amber-900 tracking-wide">
+                    {tierAccess.message}
+                    {!user?.identityVerified && (
+                      <Link to="/profile" className="block mt-2 font-bold uppercase underline">
+                        Complete verification in Profile &rarr;
+                      </Link>
+                    )}
+                  </div>
+                )}
                 <form onSubmit={handlePlaceBid} className="border border-[#dcd9ce] p-6 mb-6">
-                  {bidError && (
+                  {tierAccess.allowed && bidError && (
                     <div className="mb-4 text-xs font-mono text-red-600 uppercase tracking-wide">
                       Error: {bidError}
                     </div>
@@ -512,16 +537,20 @@ const AuctionDetailPage = () => {
                       <Input
                         placeholder={(Math.max(auction.currentBid || 0, auction.startPrice || 0) + auction.bidIncrement).toString()}
                         className="flex-1"
-                        inputClassName="text-xl"
+                        inputClassName={`text-xl ${!tierAccess.allowed ? 'opacity-50 pointer-events-none' : ''}`}
                         value={bidAmount}
                         onChange={(e) => setBidAmount(e.target.value)}
                       />
-                      <button type="submit" className="bg-[#3b8754] hover:bg-[#327347] text-white text-[10px] font-bold tracking-widest uppercase px-4 py-3 ml-4 flex items-center gap-2 transition-colors cursor-pointer">
+                      <button
+                        type="submit"
+                        disabled={!tierAccess.allowed}
+                        className="bg-[#3b8754] hover:bg-[#327347] disabled:bg-gray-300 disabled:cursor-not-allowed text-white text-[10px] font-bold tracking-widest uppercase px-4 py-3 ml-4 flex items-center gap-2 transition-colors cursor-pointer"
+                      >
                         PLACE BID
                       </button>
                     </div>
                   </div>
-                  <div className="border-t border-[#dcd9ce] pt-6 flex flex-col gap-4">
+                  <div className={`border-t border-[#dcd9ce] pt-6 flex flex-col gap-4 ${!tierAccess.allowed ? 'opacity-50 pointer-events-none' : ''}`}>
                     <div className="flex justify-between items-center">
                       <p className="text-[10px] text-gray-500 tracking-[0.2em] uppercase font-bold">
                         AUTO-BID
@@ -599,6 +628,7 @@ const AuctionDetailPage = () => {
                   size="lg"
                   className="w-full py-4 text-[11px] bg-[#256037] hover:bg-[#1a4326] border-[#256037]"
                   onClick={handleGoToSettlement}
+                  disabled={!tierAccess.allowed}
                 >
                   PROCEED TO SETTLEMENT &rarr;
                 </Button>

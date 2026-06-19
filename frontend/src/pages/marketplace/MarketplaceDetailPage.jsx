@@ -9,12 +9,12 @@ import PriceHistoryChart from "../../components/features/marketplace/PriceHistor
 import assetService from "../../services/assetService";
 import wishlistService from "../../services/wishlistService";
 import useAuth from "../../hooks/useAuth";
-import { getEffectiveBuyerTier, formatBuyerTierLabel } from "../../utils/tierUtils";
+import { getEffectiveBuyerTier, formatBuyerTierLabel, checkBuyerTierAccess } from "../../utils/tierUtils";
 
 const MarketplaceDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -95,11 +95,21 @@ const MarketplaceDetailPage = () => {
     };
   }, [item]);
 
+  const tierAccess = useMemo(() => {
+    if (!item) return { allowed: true };
+    if (!isAuthenticated) return { allowed: true };
+    return checkBuyerTierAccess(user?.tier, item);
+  }, [item, user?.tier, isAuthenticated]);
+
   const selectedImage = itemDetails?.images[selectedImageIndex];
 
   const handleAcquireInstantly = () => {
     if (!isAuthenticated) {
       navigate("/auth", { state: { from: `/marketplace/${id}` } });
+      return;
+    }
+
+    if (!tierAccess.allowed) {
       return;
     }
 
@@ -334,12 +344,23 @@ const MarketplaceDetailPage = () => {
 
             {/* Actions */}
             <div className="flex flex-col gap-3 mb-6">
+              {!tierAccess.allowed && (
+                <div className="border border-amber-200 bg-amber-50 px-4 py-3 text-[11px] font-mono text-amber-900 tracking-wide">
+                  {tierAccess.message}
+                  {!user?.identityVerified && (
+                    <Link to="/profile" className="block mt-2 font-bold uppercase underline">
+                      Complete verification in Profile &rarr;
+                    </Link>
+                  )}
+                </div>
+              )}
               <Button
                 fullWidth
                 variant="primary"
                 size="lg"
                 className="py-4 text-[11px]"
                 onClick={handleAcquireInstantly}
+                disabled={!tierAccess.allowed}
               >
                 ACQUIRE INSTANTLY &rarr;
               </Button>
