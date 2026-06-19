@@ -184,10 +184,10 @@ const PortfolioPage = () => {
               TOTAL VAULT VALUE
             </p>
             <p className="text-2xl font-mono text-black font-bold mb-1">
-              {items.length > 0 ? summary.totalValue : "CHF 7.92M"}
+              {items.length > 0 ? summary.totalValue : "CHF 0"}
             </p>
             <p className="text-[13px] text-gray-400 font-mono">
-              {items.length > 0 ? `${summary.count} assets` : "6 assets"}
+              {items.length > 0 ? `${summary.count} assets` : "0 assets"}
             </p>
           </div>
           <div className="p-6 border-b md:border-b-0 md:border-r border-[#dcd9ce]">
@@ -195,10 +195,10 @@ const PortfolioPage = () => {
               UNREALIZED GAIN
             </p>
             <p className={`text-2xl font-mono font-bold mb-1 ${items.length > 0 && summary.gainAmount.startsWith("-") ? "text-red-600" : "text-green-600"}`}>
-              {items.length > 0 ? summary.gainAmount : "+CHF 700,000"}
+              {items.length > 0 ? summary.gainAmount : "+CHF 0"}
             </p>
             <p className="text-[13px] text-gray-400 font-mono">
-              {items.length > 0 ? `${summary.gainPercent} since acquisition` : "+9.7% since acquisition"}
+              {items.length > 0 ? `${summary.gainPercent} since acquisition` : "+0.0% since acquisition"}
             </p>
           </div>
           <div className="p-6 border-b md:border-b-0 md:border-r border-[#dcd9ce]">
@@ -206,7 +206,7 @@ const PortfolioPage = () => {
               ACQUISITION COST
             </p>
             <p className="text-2xl font-mono text-black font-bold mb-1">
-              {items.length > 0 ? summary.totalAcqCost : "CHF 7.22M"}
+              {items.length > 0 ? summary.totalAcqCost : "CHF 0"}
             </p>
             <p className="text-[13px] text-gray-400 font-mono">
               Total deployed capital
@@ -217,7 +217,7 @@ const PortfolioPage = () => {
               ACTIVE BIDS
             </p>
             <p className="text-2xl font-mono text-black font-bold mb-1">
-              {items.length > 0 ? summary.activeBids : "02"}
+              {items.length > 0 ? summary.activeBids : "00"}
             </p>
             <p className="text-[13px] text-gray-400 font-mono">
               Live auction rooms
