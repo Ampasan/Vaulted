@@ -19,6 +19,7 @@ import StatusDot from "../../components/ui/StatusDot";
 import PriceHistoryChart from "../../components/features/marketplace/PriceHistoryChart";
 import useAuth from "../../hooks/useAuth";
 import assetService from "../../services/assetService";
+import wishlistService from "../../services/wishlistService";
 import { getEffectiveBuyerTier, formatBuyerTierLabel, checkBuyerTierAccess } from "../../utils/tierUtils";
 
 const AuctionDetailPage = () => {
@@ -38,6 +39,9 @@ const AuctionDetailPage = () => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isImageFull, setIsImageFull] = useState(false);
   const [isBidHistoryOpen, setIsBidHistoryOpen] = useState(false);
+
+  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
 
   const fetchAuction = async () => {
     try {
@@ -60,6 +64,28 @@ const AuctionDetailPage = () => {
       fetchAuction();
     }
   }, [id]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      const checkWishlist = async () => {
+        try {
+          const res = await wishlistService.getWishlist();
+          if (res.success && res.data) {
+            const inWishlist = res.data.some(w => {
+              const currentId = w.itemId?._id || w.itemId;
+              return currentId === auction?.itemId?._id;
+            });
+            setIsWishlisted(inWishlist);
+          }
+        } catch (err) {
+          console.error("Failed to check wishlist status", err);
+        }
+      };
+      if (auction?.itemId) {
+        checkWishlist();
+      }
+    }
+  }, [auction?.itemId, isAuthenticated]);
 
   const handleCountdownComplete = () => {
     fetchAuction();
@@ -214,6 +240,32 @@ const AuctionDetailPage = () => {
         returnTo: `/auctions/${id}`,
       },
     });
+  };
+
+  const handleToggleWishlist = async () => {
+    if (!isAuthenticated) {
+      navigate("/auth", { state: { from: `/auctions/${id}` } });
+      return;
+    }
+
+    const targetItemId = auction?.itemId?._id;
+    if (!targetItemId) return;
+
+    try {
+      setWishlistLoading(true);
+      if (isWishlisted) {
+        await wishlistService.removeFromWishlist(targetItemId);
+        setIsWishlisted(false);
+      } else {
+        await wishlistService.addToWishlist(targetItemId);
+        setIsWishlisted(true);
+      }
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.message || "Failed to update wishlist.");
+    } finally {
+      setWishlistLoading(false);
+    }
   };
 
   const provenance = useMemo(() => {
@@ -679,9 +731,11 @@ const AuctionDetailPage = () => {
                   fullWidth
                   variant="outline"
                   size="lg"
-                  className="py-4 text-[11px] gap-2 border-[#dcd9ce] hover:border-black w-1/2"
+                  className={`py-4 text-[11px] gap-2 border-[#dcd9ce] w-1/2 ${isWishlisted ? 'bg-black text-white hover:bg-gray-800' : 'hover:border-black'}`}
+                  onClick={handleToggleWishlist}
+                  disabled={wishlistLoading}
                 >
-                  <Heart className="w-4 h-4" /> WISHLIST
+                  <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-current text-white' : ''}`} /> {isWishlisted ? 'WISHLISTED' : 'WISHLIST'}
                 </Button>
                 <div className="w-1/2 py-4 flex items-center justify-center gap-2 text-[11px] text-gray-500 tracking-[0.2em] uppercase font-bold select-none">
                   <ShieldCheck className="w-4 h-4 text-gray-400" /> VAULT

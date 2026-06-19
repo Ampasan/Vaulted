@@ -8,6 +8,7 @@ import AssetListRow from '../components/features/asset/AssetListRow';
 import AssetGrid from '../components/features/asset/AssetGrid';
 import AssetCard from '../components/features/asset/AssetCard';
 import wishlistService from '../services/wishlistService';
+import assetService from '../services/assetService';
 
 const wishlistTabs = [
   { id: 'all', label: 'All' },
@@ -48,17 +49,34 @@ const WishlistPage = () => {
     try {
       setLoading(true);
       setError(null);
-      const res = await wishlistService.getWishlist();
-      if (res.success && res.data) {
-        const formatted = res.data.map((item) => {
+      
+      const [wishlistRes, activeAuctionsRes] = await Promise.all([
+        wishlistService.getWishlist(),
+        assetService.getAuctions("active").catch(() => ({ success: false, data: [] }))
+      ]);
+
+      if (wishlistRes.success && wishlistRes.data) {
+        const activeAuctionItemIds = new Set(
+          (activeAuctionsRes.success && activeAuctionsRes.data ? activeAuctionsRes.data : [])
+            .map(a => a.itemId?._id || a.itemId)
+        );
+
+        const formatted = wishlistRes.data.map((item) => {
           const itemData = item.itemId || {};
           const nameParts = (itemData.name || '').split(' ');
           const maker = nameParts[0] || '';
           const title = nameParts.slice(1).join(' ') || itemData.name || 'Untitled';
           const catId = getCategoryId(itemData.name, itemData.description);
           
+          const itemId = itemData._id || item._id;
+          let calculatedStatus = undefined;
+
+          if (itemData.status === 'in_auction') {
+            calculatedStatus = activeAuctionItemIds.has(itemId) ? 'live' : 'upcoming';
+          }
+          
           return {
-            id: itemData._id || item._id,
+            id: itemId,
             wishlistId: item._id,
             image: Array.isArray(itemData.imageUrl) && itemData.imageUrl.length > 0
               ? itemData.imageUrl[0]
@@ -67,7 +85,7 @@ const WishlistPage = () => {
             title: title,
             category: getCategoryLabel(catId),
             categoryId: catId,
-            status: itemData.status === 'in_auction' || itemData.status === 'listed_marketplace' ? 'live' : undefined,
+            status: calculatedStatus,
             addedDate: new Date(item.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
             saleType: itemData.status === 'in_auction' ? 'Live Auction' : 'Private Sale',
             currency: 'CHF',

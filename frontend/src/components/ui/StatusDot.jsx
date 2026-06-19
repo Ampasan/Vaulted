@@ -100,7 +100,7 @@ const StatusDot = ({ status = 'live', size = 'sm', variant = 'badge', className 
     <div
       className={cx(
         'inline-flex items-center gap-1.5 font-bold uppercase z-10',
-        isInline ? 'bg-transparent text-red-600 px-0' : tone.badge,
+        isInline ? `bg-transparent px-0 ${normalizedStatus === 'live' ? 'text-red-600' : 'text-gray-500'}` : tone.badge,
         !isInline && sizing.badge,
         className
       )}

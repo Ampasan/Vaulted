@@ -22,6 +22,8 @@ const MarketplaceDetailPage = () => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isImageFull, setIsImageFull] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
 
   useEffect(() => {
     const fetchItemDetails = async () => {
@@ -44,6 +46,26 @@ const MarketplaceDetailPage = () => {
 
     fetchItemDetails();
   }, [id]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      const checkWishlist = async () => {
+        try {
+          const res = await wishlistService.getWishlist();
+          if (res.success && res.data) {
+            const inWishlist = res.data.some(w => {
+              const currentId = w.itemId?._id || w.itemId;
+              return currentId === id;
+            });
+            setIsWishlisted(inWishlist);
+          }
+        } catch (err) {
+          console.error("Failed to check wishlist status", err);
+        }
+      };
+      checkWishlist();
+    }
+  }, [id, isAuthenticated]);
 
   const itemDetails = useMemo(() => {
     if (!item) return null;
@@ -128,17 +150,25 @@ const MarketplaceDetailPage = () => {
     });
   };
 
-  const handleAddToWishlist = async () => {
+  const handleToggleWishlist = async () => {
     if (!isAuthenticated) {
       navigate("/auth", { state: { from: `/marketplace/${id}` } });
       return;
     }
     try {
-      await wishlistService.addToWishlist(id);
-      alert("Added to wishlist successfully!");
+      setWishlistLoading(true);
+      if (isWishlisted) {
+        await wishlistService.removeFromWishlist(id);
+        setIsWishlisted(false);
+      } else {
+        await wishlistService.addToWishlist(id);
+        setIsWishlisted(true);
+      }
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || "Failed to add to wishlist (item might already be saved).");
+      alert(err.response?.data?.message || "Failed to update wishlist.");
+    } finally {
+      setWishlistLoading(false);
     }
   };
 
@@ -368,10 +398,11 @@ const MarketplaceDetailPage = () => {
                 fullWidth
                 variant="outline"
                 size="lg"
-                className="py-4 text-[11px] gap-2 border-[#dcd9ce] hover:border-black"
-                onClick={handleAddToWishlist}
+                className={`py-4 text-[11px] gap-2 border-[#dcd9ce] ${isWishlisted ? 'bg-black text-white hover:bg-gray-800' : 'hover:border-black'}`}
+                onClick={handleToggleWishlist}
+                disabled={wishlistLoading}
               >
-                <Heart className="w-4 h-4" /> ADD TO WISHLIST
+                <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-current text-white' : ''}`} /> {isWishlisted ? 'WISHLISTED' : 'ADD TO WISHLIST'}
               </Button>
             </div>
 
