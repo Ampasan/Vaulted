@@ -13,6 +13,16 @@ export const paymentService = {
     }
   },
 
+  createVirtualAccount: async (data) => {
+    try {
+      const response = await api.post('/payments/create-va', data);
+      return response.data;
+    } catch (error) {
+      console.error("createVirtualAccount error response:", error.response?.data || error.message);
+      throw error;
+    }
+  },
+
   getSavedCards: async () => {
     const response = await api.get('/payments/saved-cards');
     return response.data;

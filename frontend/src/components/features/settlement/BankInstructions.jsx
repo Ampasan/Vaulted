@@ -44,7 +44,19 @@ const CopyField = ({ label, value, highlight = false }) => {
   );
 };
 
-const BankInstructions = ({ fields = defaultFields }) => {
+const BankInstructions = ({ virtualAccountDetails }) => {
+  let fields = defaultFields;
+
+  if (virtualAccountDetails) {
+    const displayBankName = virtualAccountDetails.bankCode?.replace('_VIRTUAL_ACCOUNT', '');
+    fields = [
+      { label: 'Beneficiary Bank', value: displayBankName, highlight: false },
+      { label: 'Account Name', value: virtualAccountDetails.name, highlight: false },
+      { label: 'Account Number (VA)', value: virtualAccountDetails.accountNumber, highlight: true },
+      { label: 'Amount to Pay', value: `IDR ${virtualAccountDetails.expectedAmount.toLocaleString()}`, highlight: false },
+    ];
+  }
+
   return (
     <section className="mb-12">
       <div className="flex border border-[#dcd9ce] bg-cream-light">

@@ -10,6 +10,7 @@ export interface ITransaction extends Document {
   amount: number;
   type: TransactionType;
   status: TransactionStatus;
+  metadata?: Record<string, any>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -30,6 +31,7 @@ const transactionSchema = new Schema<ITransaction>(
       enum: ["completed", "failed", "pending"],
       default: "completed",
     },
+    metadata: { type: Schema.Types.Mixed },
   },
   { timestamps: true }
 );

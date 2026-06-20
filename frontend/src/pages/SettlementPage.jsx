@@ -28,6 +28,9 @@ const SettlementPage = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
 
+  const [selectedBank, setSelectedBank] = useState("BCA_VIRTUAL_ACCOUNT");
+  const [virtualAccountDetails, setVirtualAccountDetails] = useState(null);
+
   const [cardNumber, setCardNumber] = useState("");
   const [cardholderName, setCardholderName] = useState("");
   const [expiryDate, setExpiryDate] = useState("");
@@ -69,9 +72,11 @@ const SettlementPage = () => {
 
   const confirmLabel = loading
     ? "Processing Settlement..."
-    : paymentMethod === "bank"
-      ? "Confirm Bank Transfer Initiation →"
-      : "Confirm Card Payment →";
+    : virtualAccountDetails
+      ? "Return to Portfolio"
+      : paymentMethod === "bank"
+        ? "Confirm Bank Transfer Initiation →"
+        : "Confirm Card Payment →";
 
   const tokenizeCard = () => {
     return new Promise((resolve, reject) => {
@@ -206,16 +211,21 @@ const SettlementPage = () => {
         }
       } else {
         // Bank Transfer
-        if (settlementAsset.isMarketplacePurchase && settlementAsset.id) {
-          const res = await assetService.buyMarketplaceItem(settlementAsset.id);
-          if (!res.success) {
-            throw new Error(res.message || "Acquisition settlement failed.");
-          }
-        }
-        setSuccess(true);
-        setTimeout(() => {
+        if (virtualAccountDetails) {
           navigate("/portfolio");
-        }, 2000);
+          return;
+        }
+
+        const res = await paymentService.createVirtualAccount({
+          itemId: settlementAsset.id,
+          bankCode: selectedBank
+        });
+
+        if (res.success && res.virtualAccount) {
+          setVirtualAccountDetails(res.virtualAccount);
+        } else {
+          throw new Error(res.message || "Acquisition settlement failed.");
+        }
       }
     } catch (err) {
       console.error("Settlement error:", err);
@@ -282,7 +292,30 @@ const SettlementPage = () => {
           onChange={setPaymentMethod}
         />
 
-        {paymentMethod === "bank" && <BankInstructions />}
+        {paymentMethod === "bank" && (
+          <div className="mb-6">
+            {!virtualAccountDetails ? (
+              <div className="p-6 bg-white border border-[#dcd9ce]">
+                <label className="block text-[12px] uppercase font-bold tracking-[0.2em] text-[#888888] mb-2">
+                  Select Beneficiary Bank
+                </label>
+                <select
+                  value={selectedBank}
+                  onChange={(e) => setSelectedBank(e.target.value)}
+                  className="w-full h-12 px-4 bg-transparent border border-black text-black font-medium focus:outline-none focus:ring-1 focus:ring-black rounded-none"
+                >
+                  <option value="BCA_VIRTUAL_ACCOUNT">BCA</option>
+                  <option value="MANDIRI_VIRTUAL_ACCOUNT">MANDIRI</option>
+                  <option value="BNI_VIRTUAL_ACCOUNT">BNI</option>
+                  <option value="BRI_VIRTUAL_ACCOUNT">BRI</option>
+                  <option value="PERMATA_VIRTUAL_ACCOUNT">PERMATA</option>
+                </select>
+              </div>
+            ) : (
+              <BankInstructions virtualAccountDetails={virtualAccountDetails} />
+            )}
+          </div>
+        )}
         {paymentMethod === "card" && (
           <CardForm
             cardNumber={cardNumber}

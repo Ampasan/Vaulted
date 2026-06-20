@@ -1,6 +1,6 @@
 import mongoose, { Document, Schema, Types } from "mongoose";
 
-export type ItemStatus = "owned" | "listed_marketplace" | "in_auction" | "sold";
+export type ItemStatus = "owned" | "listed_marketplace" | "in_auction" | "sold" | "pending_settlement";
 
 export interface IPriceHistoryEntry {
   price: number;
@@ -50,7 +50,7 @@ const itemSchema = new Schema<Item>(
     priceHistory: { type: [priceHistorySchema], default: [] },
     status: {
       type: String,
-      enum: ["owned", "listed_marketplace", "in_auction", "sold"],
+      enum: ["owned", "listed_marketplace", "in_auction", "sold", "pending_settlement"],
       default: "owned",
     },
     verificationDocument: { type: String, default: "" },
