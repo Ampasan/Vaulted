@@ -9,6 +9,7 @@ import VerificationStatus from '../components/features/profile/VerificationStatu
 import TransactionPreview from '../components/features/profile/TransactionPreview';
 import useTransactions from '../hooks/useTransactions';
 import { formatUserTierLabel } from '../utils/tierUtils';
+import useScrollToTop from '../hooks/useScrollToTop';
 
 const getInitials = (name) => {
   if (!name) return '';
@@ -33,6 +34,8 @@ const getMemberId = (id) => {
 };
 
 const ProfilePage = () => {
+  useScrollToTop();
+
   const { user, loading } = useAuth();
   const { transactions, loading: txLoading } = useTransactions();
   const navigate = useNavigate();

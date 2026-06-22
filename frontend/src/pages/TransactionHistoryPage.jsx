@@ -4,8 +4,11 @@ import Footer from '../components/layout/Footer';
 import TransactionFilter from '../components/features/transactions/TransactionFilter';
 import TransactionRow from '../components/features/transactions/TransactionRow';
 import useTransactions from '../hooks/useTransactions';
+import useScrollToTop from '../hooks/useScrollToTop';
 
 const TransactionHistoryPage = () => {
+  useScrollToTop();
+
   const { transactions, loading } = useTransactions();
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [filterType, setFilterType] = useState('ALL');

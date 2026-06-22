@@ -6,6 +6,7 @@ import AssetCard from '../components/features/asset/AssetCard';
 import AssetGrid from '../components/features/asset/AssetGrid';
 import Button from '../components/ui/Button';
 import assetService from '../services/assetService';
+import useScrollToTop from '../hooks/useScrollToTop';
 
 const getTimeLeft = (endTime) => {
   const diff = new Date(endTime) - new Date();
@@ -31,6 +32,8 @@ const getCategoryLabel = (category = '', name = '', description = '') => {
 };
 
 const LandingPage = () => {
+  useScrollToTop();
+
   const navigate = useNavigate();
   const [liveAuctions, setLiveAuctions] = useState([]);
   const [recentAcquisitions, setRecentAcquisitions] = useState([]);

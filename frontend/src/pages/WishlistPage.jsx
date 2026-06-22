@@ -9,6 +9,7 @@ import AssetGrid from '../components/features/asset/AssetGrid';
 import AssetCard from '../components/features/asset/AssetCard';
 import wishlistService from '../services/wishlistService';
 import assetService from '../services/assetService';
+import useScrollToTop from '../hooks/useScrollToTop';
 
 const wishlistTabs = [
   { id: 'all', label: 'All' },
@@ -39,6 +40,8 @@ const getCategoryLabel = (catId) => {
 };
 
 const WishlistPage = () => {
+  useScrollToTop();
+
   const [activeTab, setActiveTab] = useState('all');
   const [viewMode, setViewMode] = useState('list');
   const [items, setItems] = useState([]);

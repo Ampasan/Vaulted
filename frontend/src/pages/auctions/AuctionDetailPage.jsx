@@ -21,8 +21,11 @@ import useAuth from "../../hooks/useAuth";
 import assetService from "../../services/assetService";
 import wishlistService from "../../services/wishlistService";
 import { getEffectiveBuyerTier, formatBuyerTierLabel, checkBuyerTierAccess } from "../../utils/tierUtils";
+import useScrollToTop from "../../hooks/useScrollToTop";
 
 const AuctionDetailPage = () => {
+  useScrollToTop();
+
   const { id } = useParams();
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();

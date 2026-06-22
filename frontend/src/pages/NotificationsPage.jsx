@@ -5,8 +5,11 @@ import Header from '../components/layout/Header';
 import NotificationItem from '../components/features/notifications/NotificationItem';
 import { useNotification } from '../hooks/useNotification';
 import { formatDate } from '../utils/formatDate';
+import useScrollToTop from '../hooks/useScrollToTop';
 
 const NotificationsPage = () => {
+  useScrollToTop();
+
   const {
     notifications,
     loading,

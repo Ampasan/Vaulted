@@ -9,6 +9,7 @@ import AllocationChart from "../components/features/portfolio/AllocationChart";
 import AssetCard from "../components/features/asset/AssetCard";
 import HeldAssetRow from "../components/features/portfolio/HeldAssetRow";
 import assetService from "../services/assetService";
+import useScrollToTop from "../hooks/useScrollToTop";
 
 const parsePrice = (priceStr) => {
   if (!priceStr) return 0;
@@ -21,6 +22,8 @@ const parseGain = (gainStr) => {
 };
 
 const PortfolioPage = () => {
+  useScrollToTop();
+
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState("grid");
   const [sortBy, setSortBy] = useState("value");

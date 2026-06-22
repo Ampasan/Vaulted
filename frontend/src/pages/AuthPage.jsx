@@ -2,11 +2,14 @@ import { useState } from 'react';
 import Tabs from '../components/ui/Tabs';
 import LoginForm from '../components/features/auth/LoginForm';
 import RegisterForm from '../components/features/auth/RegisterForm';
+import useScrollToTop from '../hooks/useScrollToTop';
 
 const AUTH_IMAGE =
   'https://res.cloudinary.com/drrmbeiyk/image/upload/v1781276276/AuthImage_vfhrqd.webp';
 
 const AuthPage = () => {
+  useScrollToTop();
+
   const [activeTab, setActiveTab] = useState('login');
 
   return (

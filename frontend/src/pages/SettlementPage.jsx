@@ -14,8 +14,11 @@ import VerificationUploadSection from "../components/features/asset/Verification
 import assetService from "../services/assetService";
 import paymentService from "../services/paymentService";
 import useAuth from "../hooks/useAuth";
+import useScrollToTop from "../hooks/useScrollToTop";
 
 const SettlementPage = () => {
+  useScrollToTop();
+
   const navigate = useNavigate();
   const location = useLocation();
   const settlementAsset = location.state?.asset;

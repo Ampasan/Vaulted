@@ -7,6 +7,7 @@ import ListingTypeCards from "../components/features/asset/ListingTypeCards";
 import AuctionForm from "../components/features/item/AuctionForm";
 import SellForm from "../components/features/item/SellForm";
 import assetService from "../services/assetService";
+import useScrollToTop from "../hooks/useScrollToTop";
 
 const initialAssetDetails = {
   title: "",
@@ -33,6 +34,8 @@ const initialFixedPrice = {
 };
 
 const MakeAssetPage = () => {
+  useScrollToTop();
+
   const navigate = useNavigate();
   const [listingType, setListingType] = useState("sell");
   const [assetDetails, setAssetDetails] = useState(initialAssetDetails);

@@ -10,8 +10,11 @@ import assetService from "../../services/assetService";
 import wishlistService from "../../services/wishlistService";
 import useAuth from "../../hooks/useAuth";
 import { getEffectiveBuyerTier, formatBuyerTierLabel, checkBuyerTierAccess } from "../../utils/tierUtils";
+import useScrollToTop from "../../hooks/useScrollToTop";
 
 const MarketplaceDetailPage = () => {
+  useScrollToTop();
+
   const { id } = useParams();
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
