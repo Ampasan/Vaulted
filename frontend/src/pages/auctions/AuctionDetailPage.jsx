@@ -23,6 +23,12 @@ import wishlistService from "../../services/wishlistService";
 import { getEffectiveBuyerTier, formatBuyerTierLabel, checkBuyerTierAccess } from "../../utils/tierUtils";
 import useScrollToTop from "../../hooks/useScrollToTop";
 
+const getEntityId = (entity) => {
+  if (!entity) return undefined;
+  if (typeof entity === "string") return entity;
+  return entity._id || entity.id;
+};
+
 const AuctionDetailPage = () => {
   useScrollToTop();
 
@@ -104,6 +110,11 @@ const AuctionDetailPage = () => {
       return;
     }
 
+    if (isOwnItem) {
+      setBidError("You cannot bid on your own auction.");
+      return;
+    }
+
     if (!tierAccess.allowed) {
       setBidError(tierAccess.message);
       return;
@@ -137,6 +148,9 @@ const AuctionDetailPage = () => {
   };
 
   const item = useMemo(() => auction?.itemId || {}, [auction]);
+  const currentUserId = user?.id || user?._id;
+  const sellerId = getEntityId(auction?.sellerId) || getEntityId(item?.ownerId);
+  const isOwnItem = isAuthenticated && sellerId === currentUserId;
   const images = useMemo(() => {
     if (Array.isArray(item.imageUrl) && item.imageUrl.length > 0) {
       return item.imageUrl;
@@ -194,7 +208,6 @@ const AuctionDetailPage = () => {
     return auction?.status === "active" && !isUpcoming && initialSeconds > 0;
   }, [auction, isUpcoming, initialSeconds]);
 
-  const currentUserId = user?.id || user?._id;
   const isLeadingBidder = useMemo(() => {
     if (!auction?.highestBidderId || !currentUserId) return false;
     const leadId = typeof auction.highestBidderId === "object"
@@ -221,6 +234,10 @@ const AuctionDetailPage = () => {
   const handleGoToSettlement = () => {
     if (!isAuthenticated) {
       navigate("/auth", { state: { from: `/auctions/${id}` } });
+      return;
+    }
+
+    if (isOwnItem) {
       return;
     }
 
@@ -559,6 +576,14 @@ const AuctionDetailPage = () => {
             )}
             {isLive && (
               <>
+                {isOwnItem && (
+                  <div className="border border-[#dcd9ce] bg-cream-light px-4 py-3 mb-6 text-[11px] font-mono text-gray-700 tracking-wide">
+                    You own this auction lot. Bidding is disabled for your own items.
+                    <Link to={`/portfolio/${item._id}`} className="block mt-2 font-bold uppercase underline">
+                      Open portfolio controls &rarr;
+                    </Link>
+                  </div>
+                )}
                 {!tierAccess.allowed && (
                   <div className="border border-amber-200 bg-amber-50 px-4 py-3 mb-6 text-[11px] font-mono text-amber-900 tracking-wide">
                     {tierAccess.message}
@@ -592,20 +617,21 @@ const AuctionDetailPage = () => {
                       <Input
                         placeholder={(Math.max(auction.currentBid || 0, auction.startPrice || 0) + auction.bidIncrement).toString()}
                         className="flex-1"
-                        inputClassName={`text-xl ${!tierAccess.allowed ? 'opacity-50 pointer-events-none' : ''}`}
+                        inputClassName={`text-xl ${(!tierAccess.allowed || isOwnItem) ? 'opacity-50 pointer-events-none' : ''}`}
                         value={bidAmount}
                         onChange={(e) => setBidAmount(e.target.value)}
+                        disabled={isOwnItem}
                       />
                       <button
                         type="submit"
-                        disabled={!tierAccess.allowed}
+                        disabled={!tierAccess.allowed || isOwnItem}
                         className="bg-[#3b8754] hover:bg-[#327347] disabled:bg-gray-300 disabled:cursor-not-allowed text-white text-[10px] font-bold tracking-widest uppercase px-4 py-3 ml-4 flex items-center gap-2 transition-colors cursor-pointer"
                       >
                         PLACE BID
                       </button>
                     </div>
                   </div>
-                  <div className={`border-t border-[#dcd9ce] pt-6 flex flex-col gap-4 ${!tierAccess.allowed ? 'opacity-50 pointer-events-none' : ''}`}>
+                  <div className={`border-t border-[#dcd9ce] pt-6 flex flex-col gap-4 ${(!tierAccess.allowed || isOwnItem) ? 'opacity-50 pointer-events-none' : ''}`}>
                     <div className="flex justify-between items-center">
                       <p className="text-[10px] text-gray-500 tracking-[0.2em] uppercase font-bold">
                         AUTO-BID
@@ -683,7 +709,7 @@ const AuctionDetailPage = () => {
                   size="lg"
                   className="w-full py-4 text-[11px] bg-[#256037] hover:bg-[#1a4326] border-[#256037]"
                   onClick={handleGoToSettlement}
-                  disabled={!tierAccess.allowed}
+                  disabled={!tierAccess.allowed || isOwnItem}
                 >
                   PROCEED TO SETTLEMENT &rarr;
                 </Button>

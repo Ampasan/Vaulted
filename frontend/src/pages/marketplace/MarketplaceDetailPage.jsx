@@ -12,6 +12,12 @@ import useAuth from "../../hooks/useAuth";
 import { getEffectiveBuyerTier, formatBuyerTierLabel, checkBuyerTierAccess } from "../../utils/tierUtils";
 import useScrollToTop from "../../hooks/useScrollToTop";
 
+const getEntityId = (entity) => {
+  if (!entity) return undefined;
+  if (typeof entity === "string") return entity;
+  return entity._id || entity.id;
+};
+
 const MarketplaceDetailPage = () => {
   useScrollToTop();
 
@@ -127,10 +133,15 @@ const MarketplaceDetailPage = () => {
   }, [item, user?.tier, isAuthenticated]);
 
   const selectedImage = itemDetails?.images[selectedImageIndex];
+  const isOwnItem = isAuthenticated && getEntityId(item?.ownerId) === getEntityId(user);
 
   const handleAcquireInstantly = () => {
     if (!isAuthenticated) {
       navigate("/auth", { state: { from: `/marketplace/${id}` } });
+      return;
+    }
+
+    if (isOwnItem) {
       return;
     }
 
@@ -377,6 +388,14 @@ const MarketplaceDetailPage = () => {
 
             {/* Actions */}
             <div className="flex flex-col gap-3 mb-6">
+              {isOwnItem && (
+                <div className="border border-[#dcd9ce] bg-cream-light px-4 py-3 text-[11px] font-mono text-gray-700 tracking-wide">
+                  You own this asset. Manage its marketplace status from your portfolio.
+                  <Link to={`/portfolio/${itemDetails.id}`} className="block mt-2 font-bold uppercase underline">
+                    Open portfolio controls &rarr;
+                  </Link>
+                </div>
+              )}
               {!tierAccess.allowed && (
                 <div className="border border-amber-200 bg-amber-50 px-4 py-3 text-[11px] font-mono text-amber-900 tracking-wide">
                   {tierAccess.message}
@@ -393,7 +412,7 @@ const MarketplaceDetailPage = () => {
                 size="lg"
                 className="py-4 text-[11px]"
                 onClick={handleAcquireInstantly}
-                disabled={!tierAccess.allowed}
+                disabled={!tierAccess.allowed || isOwnItem}
               >
                 ACQUIRE INSTANTLY &rarr;
               </Button>
