@@ -21,6 +21,11 @@ export const assetService = {
     return response.data;
   },
 
+  removeItemFromMarketplace: async (itemId) => {
+    const response = await api.post(`/marketplace/${itemId}/unlist`);
+    return response.data;
+  },
+
   buyMarketplaceItem: async (itemId) => {
     const response = await api.post(`/marketplace/${itemId}/buy`);
     return response.data;

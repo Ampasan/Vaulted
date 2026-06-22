@@ -14,6 +14,7 @@ import ProfilePage from './pages/ProfilePage';
 import MakeAssetPage from './pages/MakeAssetPage';
 import TransactionHistoryPage from './pages/TransactionHistoryPage';
 import PortfolioPage from './pages/PortfolioPage';
+import PortfolioAssetDetailPage from './pages/PortfolioAssetDetailPage';
 import NotificationsPage from './pages/NotificationsPage';
 import SettlementPage from './pages/SettlementPage';
 
@@ -111,6 +112,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <PortfolioPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/portfolio/:id"
+                element={
+                  <ProtectedRoute>
+                    <PortfolioAssetDetailPage />
                   </ProtectedRoute>
                 }
               />

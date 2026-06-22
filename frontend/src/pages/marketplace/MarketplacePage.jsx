@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../../components/layout/Navbar';
 import Footer from '../../components/layout/Footer';
@@ -46,6 +46,7 @@ const getCategoryLabel = (category = '', name = '', description = '') => {
 const Marketplace = () => {
   useScrollToTop();
 
+  const listingRef = useRef(null);
   const [activeTab, setActiveTab] = useState('all');
   const [search, setSearch] = useState('');
   const [items, setItems] = useState([]);
@@ -118,6 +119,13 @@ const Marketplace = () => {
     [filteredItems, currentPage]
   );
 
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    requestAnimationFrame(() => {
+      listingRef.current?.scrollIntoView({ block: 'start' });
+    });
+  };
+
   return (
     <div className="flex flex-col w-full bg-cream text-ink">
       <Navbar activeLink="marketplace" />
@@ -136,6 +144,8 @@ const Marketplace = () => {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
+
+        <div ref={listingRef} />
 
         <div className="mb-12">
           <Tabs
@@ -179,7 +189,7 @@ const Marketplace = () => {
               currentPage={pagination.currentPage}
               totalPages={pagination.totalPages}
               totalItems={pagination.totalItems}
-              onPageChange={setCurrentPage}
+              onPageChange={handlePageChange}
             />
           </>
         ) : (

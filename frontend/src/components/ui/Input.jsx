@@ -21,6 +21,7 @@ const Input = ({
   labelClassName = 'text-gray-600',
   placeholderClassName = 'placeholder:text-gray-500',
   selectIconClassName = 'text-gray-500',
+  ...props
 }) => {
   const [showPassword, setShowPassword] = useState(false);
   const inputType = showPasswordToggle ? (showPassword ? 'text' : 'password') : type;
@@ -47,9 +48,10 @@ const Input = ({
                 fieldClass,
                 placeholderClassName,
                 'appearance-none pr-8 cursor-pointer',
-                inputClassName
-              )}
-            >
+              inputClassName
+            )}
+            {...props}
+          >
               {options.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
@@ -77,6 +79,7 @@ const Input = ({
               'resize-none min-h-[120px] py-3',
               inputClassName
             )}
+            {...props}
           />
         ) : (
           <input
@@ -90,6 +93,7 @@ const Input = ({
               showPasswordToggle && 'pr-8',
               inputClassName
             )}
+            {...props}
           />
         )}
         {showPasswordToggle && as === 'input' && (

@@ -1,15 +1,19 @@
-import { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../components/layout/Navbar";
 import Footer from "../components/layout/Footer";
 import Button from "../components/ui/Button";
 import Toggle from "../components/ui/Toggle";
+import Pagination from "../components/ui/Pagination";
 import PortfolioChart from "../components/features/portfolio/PortfolioChart";
 import AllocationChart from "../components/features/portfolio/AllocationChart";
 import AssetCard from "../components/features/asset/AssetCard";
 import HeldAssetRow from "../components/features/portfolio/HeldAssetRow";
 import assetService from "../services/assetService";
 import useScrollToTop from "../hooks/useScrollToTop";
+import { paginateItems } from "../utils/pagination";
+
+const ASSETS_PER_PAGE = 6;
 
 const parsePrice = (priceStr) => {
   if (!priceStr) return 0;
@@ -25,8 +29,10 @@ const PortfolioPage = () => {
   useScrollToTop();
 
   const navigate = useNavigate();
+  const heldAssetsRef = useRef(null);
   const [viewMode, setViewMode] = useState("grid");
   const [sortBy, setSortBy] = useState("value");
+  const [currentPage, setCurrentPage] = useState(1);
   const [items, setItems] = useState([]);
   const [rawItems, setRawItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -115,6 +121,22 @@ const PortfolioPage = () => {
       return 0;
     });
   }, [sortBy, items]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [sortBy, viewMode, items]);
+
+  const pagination = useMemo(
+    () => paginateItems(sortedAssets, currentPage, ASSETS_PER_PAGE),
+    [sortedAssets, currentPage]
+  );
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    requestAnimationFrame(() => {
+      heldAssetsRef.current?.scrollIntoView({ block: "start" });
+    });
+  };
 
   const summary = useMemo(() => {
     const list = items.length > 0 ? items : [];
@@ -239,7 +261,7 @@ const PortfolioPage = () => {
         </div>
 
         {/* Held Assets Section */}
-        <div>
+        <div ref={heldAssetsRef}>
           <div className="flex justify-between items-end border-b border-[#dcd9ce] pb-4 mb-6">
             <h2 className="text-2xl font-black font-serif tracking-tight">
               Held Assets
@@ -286,11 +308,12 @@ const PortfolioPage = () => {
             </p>
           ) : viewMode === "grid" ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {sortedAssets.map((asset) => (
-                <AssetCard
-                  key={asset.id}
-                  asset={{ ...asset, aspect: "landscape", framed: false }}
-                />
+              {pagination.items.map((asset) => (
+                <Link key={asset.id} to={`/portfolio/${asset.id}`} className="block h-full">
+                  <AssetCard
+                    asset={{ ...asset, aspect: "landscape", framed: false }}
+                  />
+                </Link>
               ))}
             </div>
           ) : (
@@ -303,11 +326,21 @@ const PortfolioPage = () => {
                   <span className="text-center">Gain / Loss</span>
                   <span className="text-right">Status</span>
                 </div>
-                {sortedAssets.map((asset) => (
-                  <HeldAssetRow key={asset.id} asset={asset} />
+                {pagination.items.map((asset) => (
+                  <Link key={asset.id} to={`/portfolio/${asset.id}`} className="block">
+                    <HeldAssetRow asset={asset} />
+                  </Link>
                 ))}
               </div>
             </div>
+          )}
+          {!loading && !error && sortedAssets.length > 0 && (
+            <Pagination
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              totalItems={pagination.totalItems}
+              onPageChange={handlePageChange}
+            />
           )}
         </div>
       </main>

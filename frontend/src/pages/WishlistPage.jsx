@@ -1,15 +1,19 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useRef, useState, useEffect } from 'react';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import Header from '../components/layout/Header';
 import Tabs from '../components/ui/Tabs';
 import Toggle from '../components/ui/Toggle';
+import Pagination from '../components/ui/Pagination';
 import AssetListRow from '../components/features/asset/AssetListRow';
 import AssetGrid from '../components/features/asset/AssetGrid';
 import AssetCard from '../components/features/asset/AssetCard';
 import wishlistService from '../services/wishlistService';
 import assetService from '../services/assetService';
 import useScrollToTop from '../hooks/useScrollToTop';
+import { paginateItems } from '../utils/pagination';
+
+const WISHLIST_ITEMS_PER_PAGE = 9;
 
 const wishlistTabs = [
   { id: 'all', label: 'All' },
@@ -42,8 +46,10 @@ const getCategoryLabel = (catId) => {
 const WishlistPage = () => {
   useScrollToTop();
 
+  const wishlistListRef = useRef(null);
   const [activeTab, setActiveTab] = useState('all');
   const [viewMode, setViewMode] = useState('list');
+  const [currentPage, setCurrentPage] = useState(1);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -114,6 +120,22 @@ const WishlistPage = () => {
     return items.filter((item) => item.categoryId === activeTab);
   }, [activeTab, items]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, viewMode, items]);
+
+  const pagination = useMemo(
+    () => paginateItems(filteredItems, currentPage, WISHLIST_ITEMS_PER_PAGE),
+    [filteredItems, currentPage]
+  );
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    requestAnimationFrame(() => {
+      wishlistListRef.current?.scrollIntoView({ block: 'start' });
+    });
+  };
+
   const handleRemove = async (asset) => {
     try {
       const res = await wishlistService.removeFromWishlist(asset.id);
@@ -144,7 +166,7 @@ const WishlistPage = () => {
       </section>
 
       <main className="flex-1 w-full px-6 md:px-12 lg:px-16 xl:px-24 pt-10 pb-32">
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 mb-10">
+        <div ref={wishlistListRef} className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 mb-10">
           <Tabs
             tabs={wishlistTabs}
             activeTab={activeTab}
@@ -173,7 +195,7 @@ const WishlistPage = () => {
             </div>
 
             {filteredItems.length > 0 ? (
-              filteredItems.map((item) => (
+              pagination.items.map((item) => (
                 <AssetListRow
                   key={item.id}
                   asset={item}
@@ -188,7 +210,7 @@ const WishlistPage = () => {
           </div>
         ) : (
           <AssetGrid
-            items={filteredItems}
+            items={pagination.items}
             columns={3}
             renderItem={(item) => (
               <AssetCard
@@ -208,6 +230,14 @@ const WishlistPage = () => {
                 }}
               />
             )}
+          />
+        )}
+        {!loading && !error && filteredItems.length > 0 && (
+          <Pagination
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            totalItems={pagination.totalItems}
+            onPageChange={handlePageChange}
           />
         )}
       </main>

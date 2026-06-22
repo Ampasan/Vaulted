@@ -1,18 +1,24 @@
-import { useState, useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
+import Pagination from '../components/ui/Pagination';
 import TransactionFilter from '../components/features/transactions/TransactionFilter';
 import TransactionRow from '../components/features/transactions/TransactionRow';
 import useTransactions from '../hooks/useTransactions';
 import useScrollToTop from '../hooks/useScrollToTop';
+import { paginateItems } from '../utils/pagination';
+
+const TRANSACTIONS_PER_PAGE = 10;
 
 const TransactionHistoryPage = () => {
   useScrollToTop();
 
+  const transactionListRef = useRef(null);
   const { transactions, loading } = useTransactions();
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [filterType, setFilterType] = useState('ALL');
   const [showFilters, setShowFilters] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const filteredData = useMemo(() => {
     return transactions.filter(tx => {
@@ -21,6 +27,22 @@ const TransactionHistoryPage = () => {
       return matchStatus && matchType;
     });
   }, [transactions, filterStatus, filterType]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterStatus, filterType, transactions]);
+
+  const pagination = useMemo(
+    () => paginateItems(filteredData, currentPage, TRANSACTIONS_PER_PAGE),
+    [filteredData, currentPage]
+  );
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    requestAnimationFrame(() => {
+      transactionListRef.current?.scrollIntoView({ block: 'start' });
+    });
+  };
 
   const { totalSettledStr, activeVaults, escrowTransit } = useMemo(() => {
     let settledSum = 0;
@@ -101,7 +123,7 @@ const TransactionHistoryPage = () => {
         />
 
         {/* Table Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-[#dcd9ce] text-[10px] tracking-[0.2em] font-bold text-gray-400 uppercase px-2 mb-2">
+        <div ref={transactionListRef} className="flex items-center justify-between pb-4 border-b border-[#dcd9ce] text-[10px] tracking-[0.2em] font-bold text-gray-400 uppercase px-2 mb-2">
           <div className="w-[12%]">DATE</div>
           <div className="w-[30%]">ASSET</div>
           <div className="w-[18%]">TYPE</div>
@@ -112,7 +134,7 @@ const TransactionHistoryPage = () => {
 
         {/* Table Body */}
         <div className="flex flex-col">
-          {filteredData.map((tx) => (
+          {pagination.items.map((tx) => (
             <TransactionRow key={tx.id} transaction={tx} />
           ))}
           {filteredData.length === 0 && (
@@ -121,6 +143,14 @@ const TransactionHistoryPage = () => {
             </div>
           )}
         </div>
+        {filteredData.length > 0 && (
+          <Pagination
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            totalItems={pagination.totalItems}
+            onPageChange={handlePageChange}
+          />
+        )}
       </main>
 
       <Footer />

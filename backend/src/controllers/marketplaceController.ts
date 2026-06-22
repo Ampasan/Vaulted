@@ -48,6 +48,31 @@ export const listItemOnMarketplace = asyncHandler(async (req: Request, res: Resp
   });
 });
 
+export const removeItemFromMarketplace = asyncHandler(async (req: Request, res: Response) => {
+  const item = await Item.findById(req.params.itemId);
+
+  if (!item) {
+    throw new ApiError(404, "Item not found");
+  }
+
+  if (item.ownerId.toString() !== req.user!.id) {
+    throw new ApiError(403, "You can only remove your own items");
+  }
+
+  if (item.status !== "listed_marketplace") {
+    throw new ApiError(400, "Item must be listed on marketplace to remove it");
+  }
+
+  item.status = "owned";
+  await item.save();
+
+  res.json({
+    success: true,
+    data: item,
+    message: "Item removed from marketplace",
+  });
+});
+
 export const buyMarketplaceItem = asyncHandler(async (req: Request, res: Response) => {
   const session = await mongoose.startSession();
   session.startTransaction();

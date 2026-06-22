@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Clock } from "lucide-react";
 import Navbar from "../../components/layout/Navbar";
@@ -55,6 +55,8 @@ const getCategoryTabId = (category = '') => {
 const AuctionsPage = () => {
   useScrollToTop();
 
+  const activeLotsRef = useRef(null);
+  const upcomingLotsRef = useRef(null);
   const [activeTab, setActiveTab] = useState("all");
   const [search, setSearch] = useState("");
   const [lots, setLots] = useState([]);
@@ -207,6 +209,20 @@ const AuctionsPage = () => {
       : featured.timeLeft
     : "";
 
+  const handleActivePageChange = (page) => {
+    setActivePage(page);
+    requestAnimationFrame(() => {
+      activeLotsRef.current?.scrollIntoView({ block: "start" });
+    });
+  };
+
+  const handleUpcomingPageChange = (page) => {
+    setUpcomingPage(page);
+    requestAnimationFrame(() => {
+      upcomingLotsRef.current?.scrollIntoView({ block: "start" });
+    });
+  };
+
   return (
     <div className="flex flex-col w-full bg-cream text-ink">
       <Navbar activeLink="auctions" />
@@ -300,7 +316,7 @@ const AuctionsPage = () => {
             )}
 
             {/* Active Lots */}
-            <div className="mb-24">
+            <div ref={activeLotsRef} className="mb-24">
               <div className="flex justify-between items-end mb-8 border-b border-[#dcd9ce] pb-4">
                 <h2 className="text-2xl font-black tracking-tight text-black">
                   Active Lots
@@ -335,7 +351,7 @@ const AuctionsPage = () => {
                     currentPage={activePagination.currentPage}
                     totalPages={activePagination.totalPages}
                     totalItems={activePagination.totalItems}
-                    onPageChange={setActivePage}
+                    onPageChange={handleActivePageChange}
                   />
                 </>
               ) : (
@@ -346,7 +362,7 @@ const AuctionsPage = () => {
             </div>
 
             {/* Upcoming Catalog */}
-            <div>
+            <div ref={upcomingLotsRef}>
               <div className="mb-8 border-b border-[#dcd9ce] pb-4">
                 <h2 className="text-xl font-black tracking-tight text-black">
                   Upcoming Catalog
@@ -384,7 +400,7 @@ const AuctionsPage = () => {
                     currentPage={upcomingPagination.currentPage}
                     totalPages={upcomingPagination.totalPages}
                     totalItems={upcomingPagination.totalItems}
-                    onPageChange={setUpcomingPage}
+                    onPageChange={handleUpcomingPageChange}
                   />
                 </>
               ) : (
