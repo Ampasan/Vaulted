@@ -7,10 +7,16 @@ import Header from "../../components/layout/Header";
 import SearchBar from "../../components/ui/SearchBar";
 import Tabs from "../../components/ui/Tabs";
 import Button from "../../components/ui/Button";
+import Pagination from "../../components/ui/Pagination";
 import StatusDot from "../../components/ui/StatusDot";
 import AssetGrid from "../../components/features/asset/AssetGrid";
 import AssetCard from "../../components/features/asset/AssetCard";
 import assetService from "../../services/assetService";
+import { paginateItems } from "../../utils/pagination";
+import useScrollToTop from "../../hooks/useScrollToTop";
+
+const ACTIVE_LOTS_PER_PAGE = 4;
+const UPCOMING_LOTS_PER_PAGE = 6;
 
 const auctionTabs = [
   { id: "all", label: "All Lots" },
@@ -47,12 +53,16 @@ const getCategoryTabId = (category = '') => {
 };
 
 const AuctionsPage = () => {
+  useScrollToTop();
+
   const [activeTab, setActiveTab] = useState("all");
   const [search, setSearch] = useState("");
   const [lots, setLots] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [now, setNow] = useState(new Date());
+  const [activePage, setActivePage] = useState(1);
+  const [upcomingPage, setUpcomingPage] = useState(1);
 
   useEffect(() => {
     const fetchAuctions = async () => {
@@ -143,24 +153,59 @@ const AuctionsPage = () => {
     });
   }, [activeTab, search, liveLots]);
 
-  const hasRealLive = liveLots.length > 0;
+  const filteredUpcomingLots = useMemo(() => {
+    return upcomingLots.filter((lot) => {
+      const matchesTab = activeTab === "all" || lot.categoryId === activeTab;
+      const matchesSearch =
+        search.trim() === "" ||
+        lot.title.toLowerCase().includes(search.toLowerCase()) ||
+        lot.subtitle.toLowerCase().includes(search.toLowerCase());
+      return matchesTab && matchesSearch;
+    });
+  }, [activeTab, search, upcomingLots]);
+
+  useEffect(() => {
+    setActivePage(1);
+    setUpcomingPage(1);
+  }, [activeTab, search]);
 
   const featured = filteredLots[0];
 
-  const activeList = filteredLots.slice(1).map(lot => ({
-    ...lot,
-    timeLeft: `Ends in ${getTimeLeft(lot.endTime)}`
-  }));
+  const activeList = useMemo(
+    () =>
+      filteredLots.slice(1).map((lot) => ({
+        ...lot,
+        timeLeft: `Ends in ${getTimeLeft(lot.endTime)}`,
+      })),
+    [filteredLots]
+  );
 
-  const hasRealUpcoming = upcomingLots.length > 0;
-  const upcomingList = upcomingLots.map(lot => ({
-    id: lot.id,
-    image: lot.image,
-    title: lot.title,
-    time: formatUpcomingTime(lot.startTime),
-  }));
+  const activePagination = useMemo(
+    () => paginateItems(activeList, activePage, ACTIVE_LOTS_PER_PAGE),
+    [activeList, activePage]
+  );
 
-  const featuredTimeLeft = featured ? (featured.endTime ? getTimeLeft(featured.endTime) : featured.timeLeft) : "";
+  const upcomingList = useMemo(
+    () =>
+      filteredUpcomingLots.map((lot) => ({
+        id: lot.id,
+        image: lot.image,
+        title: lot.title,
+        time: formatUpcomingTime(lot.startTime),
+      })),
+    [filteredUpcomingLots]
+  );
+
+  const upcomingPagination = useMemo(
+    () => paginateItems(upcomingList, upcomingPage, UPCOMING_LOTS_PER_PAGE),
+    [upcomingList, upcomingPage]
+  );
+
+  const featuredTimeLeft = featured
+    ? featured.endTime
+      ? getTimeLeft(featured.endTime)
+      : featured.timeLeft
+    : "";
 
   return (
     <div className="flex flex-col w-full bg-cream text-ink">
@@ -204,53 +249,55 @@ const AuctionsPage = () => {
         ) : (
           <>
             {/* Featured Auction */}
-            <div className="border border-[#dcd9ce] bg-cream-light p-6 md:p-8 flex flex-col lg:flex-row gap-8 lg:gap-16 mb-18">
-              <div className="w-full lg:w-3/5 relative bg-cream-light aspect-16/10 overflow-hidden">
-                <StatusDot
-                  status="live"
-                  size="md"
-                  className="absolute top-4 left-4"
-                />
-                <div className="absolute top-4 right-4 bg-black text-white text-[10px] font-bold px-2 py-1 tracking-[0.2em] uppercase z-10">
-                  AUTHENTICATED
-                </div>
-                <img
-                  src={featured.image}
-                  alt={featured.title}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-
-              <div className="w-full lg:w-3/6 flex flex-col justify-center">
-                <p className="text-[10px] text-[#8a8a8a] tracking-[0.2em] uppercase font-bold mb-3">
-                  {featured.lot} <span className="mx-2">•</span>{" "}
-                  {featured.date}
-                </p>
-                <h2 className="text-3xl md:text-4xl font-black tracking-tight leading-none mb-3">
-                  {featured.title}
-                </h2>
-                <p className="text-[13px] font-medium text-gray-500 mb-10">
-                  {featured.subtitle}
-                </p>
-
-                <p className="text-[11px] text-gray-400 tracking-[0.2em] uppercase font-bold mb-1">
-                  Current Bid CHF
-                </p>
-                <div className="flex flex-col gap-2 mb-8">
-                  <p className="text-4xl font-black text-black">
-                    {featured.currentBid}
-                  </p>
-                  <div className="flex items-center gap-1.5 text-red-600 text-[12px] font-bold tracking-widest">
-                    <Clock className="w-3.5 h-3.5" />
-                    {featuredTimeLeft}
+            {featured && (
+              <div className="border border-[#dcd9ce] bg-cream-light p-6 md:p-8 flex flex-col lg:flex-row gap-8 lg:gap-16 mb-18">
+                <div className="w-full lg:w-3/5 relative bg-cream-light aspect-16/10 overflow-hidden">
+                  <StatusDot
+                    status="live"
+                    size="md"
+                    className="absolute top-4 left-4"
+                  />
+                  <div className="absolute top-4 right-4 bg-black text-white text-[10px] font-bold px-2 py-1 tracking-[0.2em] uppercase z-10">
+                    AUTHENTICATED
                   </div>
+                  <img
+                    src={featured.image}
+                    alt={featured.title}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
 
-                <Link to={`/auctions/${featured.id}`} className="w-full">
-                  <Button fullWidth>ENTER AUCTION ROOM &rarr;</Button>
-                </Link>
+                <div className="w-full lg:w-3/6 flex flex-col justify-center">
+                  <p className="text-[10px] text-[#8a8a8a] tracking-[0.2em] uppercase font-bold mb-3">
+                    {featured.lot} <span className="mx-2">•</span>{" "}
+                    {featured.date}
+                  </p>
+                  <h2 className="text-3xl md:text-4xl font-black tracking-tight leading-none mb-3">
+                    {featured.title}
+                  </h2>
+                  <p className="text-[13px] font-medium text-gray-500 mb-10">
+                    {featured.subtitle}
+                  </p>
+
+                  <p className="text-[11px] text-gray-400 tracking-[0.2em] uppercase font-bold mb-1">
+                    Current Bid CHF
+                  </p>
+                  <div className="flex flex-col gap-2 mb-8">
+                    <p className="text-4xl font-black text-black">
+                      {featured.currentBid}
+                    </p>
+                    <div className="flex items-center gap-1.5 text-red-600 text-[12px] font-bold tracking-widest">
+                      <Clock className="w-3.5 h-3.5" />
+                      {featuredTimeLeft}
+                    </div>
+                  </div>
+
+                  <Link to={`/auctions/${featured.id}`} className="w-full">
+                    <Button fullWidth>ENTER AUCTION ROOM &rarr;</Button>
+                  </Link>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Active Lots */}
             <div className="mb-24">
@@ -262,26 +309,40 @@ const AuctionsPage = () => {
                   {filteredLots.length} Lot(s) Available
                 </span>
               </div>
-              <AssetGrid
-                items={activeList}
-                columns={2}
-                renderItem={(lot) => (
-                  <Link key={lot.id} to={`/auctions/${lot.id}`} className="block h-full">
-                    <AssetCard
-                      asset={{
-                        ...lot,
-                        category: lot.lot,
-                        status: "live",
-                        aspect: "landscape",
-                        framed: true,
-                        showWishlist: true,
-                        actionLabel: "PLACE BID",
-                        actionPlacement: "inline",
-                      }}
-                    />
-                  </Link>
-                )}
-              />
+              {activeList.length > 0 ? (
+                <>
+                  <AssetGrid
+                    items={activePagination.items}
+                    columns={2}
+                    renderItem={(lot) => (
+                      <Link key={lot.id} to={`/auctions/${lot.id}`} className="block h-full">
+                        <AssetCard
+                          asset={{
+                            ...lot,
+                            category: lot.lot,
+                            status: "live",
+                            aspect: "landscape",
+                            framed: true,
+                            showWishlist: true,
+                            actionLabel: "PLACE BID",
+                            actionPlacement: "inline",
+                          }}
+                        />
+                      </Link>
+                    )}
+                  />
+                  <Pagination
+                    currentPage={activePagination.currentPage}
+                    totalPages={activePagination.totalPages}
+                    totalItems={activePagination.totalItems}
+                    onPageChange={setActivePage}
+                  />
+                </>
+              ) : (
+                <p className="py-12 text-center text-[13px] text-gray-500 font-medium">
+                  No active lots match your filters.
+                </p>
+              )}
             </div>
 
             {/* Upcoming Catalog */}
@@ -291,33 +352,46 @@ const AuctionsPage = () => {
                   Upcoming Catalog
                 </h2>
               </div>
-              <AssetGrid
-                items={upcomingList}
-                columns={3}
-                className="gap-6 xl:gap-6"
-                renderItem={(item) => {
-                  const card = (
-                    <AssetCard
-                      asset={{
-                        ...item,
-                        category: "Upcoming",
-                        subtitle: item.time,
-                        layout: "horizontal",
-                        showWishlist: true,
-                      }}
-                    />
-                  );
-                  // If it has a real DB ID, make it clickable
-                  if (item.id && typeof item.id === 'string' && item.id !== 'featured') {
-                    return (
-                      <Link key={item.id} to={`/auctions/${item.id}`} className="block h-full">
-                        {card}
-                      </Link>
-                    );
-                  }
-                  return <div key={item.id}>{card}</div>;
-                }}
-              />
+              {upcomingList.length > 0 ? (
+                <>
+                  <AssetGrid
+                    items={upcomingPagination.items}
+                    columns={3}
+                    className="gap-6 xl:gap-6"
+                    renderItem={(item) => {
+                      const card = (
+                        <AssetCard
+                          asset={{
+                            ...item,
+                            category: "Upcoming",
+                            subtitle: item.time,
+                            layout: "horizontal",
+                            showWishlist: true,
+                          }}
+                        />
+                      );
+                      if (item.id && typeof item.id === "string" && item.id !== "featured") {
+                        return (
+                          <Link key={item.id} to={`/auctions/${item.id}`} className="block h-full">
+                            {card}
+                          </Link>
+                        );
+                      }
+                      return <div key={item.id}>{card}</div>;
+                    }}
+                  />
+                  <Pagination
+                    currentPage={upcomingPagination.currentPage}
+                    totalPages={upcomingPagination.totalPages}
+                    totalItems={upcomingPagination.totalItems}
+                    onPageChange={setUpcomingPage}
+                  />
+                </>
+              ) : (
+                <p className="py-12 text-center text-[13px] text-gray-500 font-medium">
+                  No upcoming lots match your filters.
+                </p>
+              )}
             </div>
           </>
         )}

@@ -5,9 +5,14 @@ import Footer from '../../components/layout/Footer';
 import Header from '../../components/layout/Header';
 import SearchBar from '../../components/ui/SearchBar';
 import Tabs from '../../components/ui/Tabs';
+import Pagination from '../../components/ui/Pagination';
 import AssetGrid from '../../components/features/asset/AssetGrid';
 import AssetCard from '../../components/features/asset/AssetCard';
 import assetService from '../../services/assetService';
+import { paginateItems } from '../../utils/pagination';
+import useScrollToTop from '../../hooks/useScrollToTop';
+
+const ITEMS_PER_PAGE = 9;
 
 const marketplaceTabs = [
   { id: 'all', label: 'All Categories' },
@@ -39,11 +44,14 @@ const getCategoryLabel = (category = '', name = '', description = '') => {
 };
 
 const Marketplace = () => {
+  useScrollToTop();
+
   const [activeTab, setActiveTab] = useState('all');
   const [search, setSearch] = useState('');
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const fetchItems = async () => {
     try {
@@ -101,6 +109,15 @@ const Marketplace = () => {
     });
   }, [activeTab, search, items]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, search]);
+
+  const pagination = useMemo(
+    () => paginateItems(filteredItems, currentPage, ITEMS_PER_PAGE),
+    [filteredItems, currentPage]
+  );
+
   return (
     <div className="flex flex-col w-full bg-cream text-ink">
       <Navbar activeLink="marketplace" />
@@ -137,26 +154,34 @@ const Marketplace = () => {
             {error}
           </p>
         ) : filteredItems.length > 0 ? (
-          <AssetGrid
-            items={filteredItems}
-            columns={3}
-            renderItem={(item) => (
-              <Link key={item.id} to={`/marketplace/${item.id}`} className="block h-full">
-                <AssetCard
-                  asset={{
-                    ...item,
-                    category: item.category,
-                    subtitle: item.ref,
-                    price: item.currPrice,
-                    priceLabel: 'Acquisition Value',
-                    aspect: 'marketplace',
-                    showWishlist: true,
-                    actionLabel: <>ACQUIRE INSTANTLY &rarr;</>,
-                  }}
-                />
-              </Link>
-            )}
-          />
+          <>
+            <AssetGrid
+              items={pagination.items}
+              columns={3}
+              renderItem={(item) => (
+                <Link key={item.id} to={`/marketplace/${item.id}`} className="block h-full">
+                  <AssetCard
+                    asset={{
+                      ...item,
+                      category: item.category,
+                      subtitle: item.ref,
+                      price: item.currPrice,
+                      priceLabel: 'Acquisition Value',
+                      aspect: 'marketplace',
+                      showWishlist: true,
+                      actionLabel: <>ACQUIRE INSTANTLY &rarr;</>,
+                    }}
+                  />
+                </Link>
+              )}
+            />
+            <Pagination
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              totalItems={pagination.totalItems}
+              onPageChange={setCurrentPage}
+            />
+          </>
         ) : (
           <p className="py-16 text-center text-[13px] text-gray-500 font-medium">
             No items found matching your filters.
